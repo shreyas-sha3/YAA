@@ -203,33 +203,43 @@ def get_academic_planner(s):
 
     now = datetime.datetime.now()
     is_even = "EVEN" in planner_link.upper()
-    if is_even and 1 <= now.month <= 6:
-        block_idx = now.month - 1
-    elif not is_even and 7 <= now.month <= 12:
-        block_idx = now.month - 7
+
+    # Determine semester month range and year mapping
+    if is_even:
+        # Even semester: Jan(0)–Jun(5), columns in blocks of 5
+        month_range = range(0, 6)  # block indices
+        month_nums = [1, 2, 3, 4, 5, 6]  # actual month numbers
+        year_base = now.year
     else:
-        return None, {}
+        # Odd semester: Jul(0)–Dec(5)
+        month_range = range(0, 6)
+        month_nums = [7, 8, 9, 10, 11, 12]
+        year_base = now.year
 
-    # Build full calendar map: date_str -> day_order
     calendar_map = {}
-    dt_idx, do_idx = block_idx * 5, block_idx * 5 + 3
     today_do = None
+    rows = soup.find('table').find_all('tr')[1:]
 
-    for row in soup.find('table').find_all('tr')[1:]:
-        cells = row.find_all('td')
-        if len(cells) > do_idx:
-            date_val = cells[dt_idx].get_text(strip=True)
-            do_val = cells[do_idx].get_text(strip=True)
-            if date_val and do_val and do_val.isdigit():
-                # We need month context — use current month for now
-                try:
-                    day = int(date_val)
-                    date_key = f"{now.year}-{now.month:02d}-{day:02d}"
-                    calendar_map[date_key] = f"Day {do_val}"
-                    if day == now.day:
-                        today_do = f"Day {do_val}"
-                except:
-                    pass
+    for block_idx in month_range:
+        dt_idx = block_idx * 5
+        do_idx = block_idx * 5 + 3
+        month_num = month_nums[block_idx]
+
+        for row in rows:
+            cells = row.find_all('td')
+            if len(cells) > do_idx:
+                date_val = cells[dt_idx].get_text(strip=True)
+                do_val = cells[do_idx].get_text(strip=True)
+                if date_val and do_val and do_val.isdigit():
+                    try:
+                        day = int(date_val)
+                        if 1 <= day <= 31:
+                            date_key = f"{year_base}-{month_num:02d}-{day:02d}"
+                            calendar_map[date_key] = f"Day {do_val}"
+                            if day == now.day and month_num == now.month:
+                                today_do = f"Day {do_val}"
+                    except:
+                        pass
 
     return today_do, calendar_map
 
@@ -298,13 +308,14 @@ def get_data():
                         break
                 if match:
                     has_class[i] = True
-                # detect lab: slot codes like L1, L2... or multiple codes
+                # detect lab: ' / X' multi-slot pattern or L-prefix codes
                 is_lab = False
-                clean_parts = [p.strip() for p in slot_str.split('/') if p.strip()]
-                if len(clean_parts) > 1:
+                if ' / ' in slot_str:
                     is_lab = True
-                elif clean_parts and re.match(r'^L\d+', clean_parts[0], re.I):
-                    is_lab = True
+                else:
+                    clean = slot_str.strip()
+                    if re.match(r'^L\d+', clean, re.I):
+                        is_lab = True
                 grid[day].append({
                     "time": times[i] if i < len(times) else "",
                     "title": match["Title"] if match else None,
@@ -374,10 +385,18 @@ def get_data():
                             if components:
                                 category = c[1].get_text(strip=True) if len(c) > 1 else ""
                                 
-                                # FIX: Look up the real title from our dictionary, fallback to the code if not found
-                                actual_title = course_titles.get(code, code)
+                                # Look up real title: try exact match, then try base code (strip trailing letter)
+                                actual_title = course_titles.get(code)
+                                if not actual_title:
+                                    # Try stripping trailing T/P/J/L suffix (e.g. 21CSE281T -> 21CSE281)
+                                    base_code = re.sub(r'[TPJL]$', '', code)
+                                    for k, v in course_titles.items():
+                                        if k.startswith(base_code) or base_code in k:
+                                            actual_title = v
+                                            break
+                                if not actual_title:
+                                    actual_title = code
                                 
-                                # Add the category (Theory/Practical) back to the end of the title so they can tell them apart
                                 if category and category.lower() in ["theory", "practical", "lab"]:
                                     final_title = f"{actual_title} ({category})"
                                 else:
