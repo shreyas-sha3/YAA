@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>YAA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #000000;
+      --surface: #0a0a0a;
+      --surface2: #111111;
+      --surface3: #1a1a1a;
+      --border: #222222;
+      --border2: #2a2a2a;
+      --text: #f0f0f0;
+      --text2: #888888;
+      --text3: #444444;
+      --accent: #e8e0d0;
+      --gold: #c9a84c;
+      --gold2: #8a6f2e;
+      --danger: #ff4444;
+      --danger-dim: rgba(255, 68, 68, 0.12);
+      --ok: #44cc77;
+      --ok-dim: rgba(68, 204, 119, 0.10);
+      --warn: #ffaa00;
+      --warn-dim: rgba(255, 170, 0, 0.10);
+      --lab: #7b68ee;
+      --lab-dim: rgba(123, 104, 238, 0.12);
+      --now: #c9a84c;
+      --now-dim: rgba(201, 168, 76, 0.12);
+      --r: 12px;
+      --r2: 8px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bot: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+    }
+
+    /* ── LOGIN ── */
+    #login-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 2rem;
+      gap: 1.5rem;
+      transition: opacity .4s ease, transform .4s ease;
+    }
+
+    #login-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-30px);
+    }
+
+    .login-logo {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      color: var(--gold);
+    }
+
+    .login-logo span {
+      color: var(--text2);
+      font-weight: 400;
+    }
+
+    .login-subtitle {
+      font-size: .75rem;
+      color: var(--text3);
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .login-form {
+      width: 100%;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+      margin-top: 1rem;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--r2);
+      padding: .9rem 1rem .9rem 3rem;
+      font-family: 'DM Mono', monospace;
+      font-size: .875rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .input-wrap input:focus {
+      border-color: var(--gold2);
+    }
+
+    .input-wrap input::placeholder {
+      color: var(--text3);
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text3);
+      font-size: .9rem;
+    }
+
+    .login-btn {
+      background: var(--gold);
+      color: #000;
+      border: none;
+      border-radius: var(--r2);
+      padding: .95rem;
+      font-family: 'Syne', sans-serif;
+      font-size: .875rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+    }
+
+    .login-btn:active {
+      transform: scale(.98);
+      opacity: .9;
+    }
+
+    .login-error {
+      color: var(--danger);
+      font-family: 'DM Mono', monospace;
+      font-size: .75rem;
+      text-align: center;
+      min-height: 1rem;
+    }
+
+    .login-suffix {
+      font-family: 'DM Mono', monospace;
+      font-size: .7rem;
+      color: var(--text3);
+      position: absolute;
+      right: .75rem;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    /* ── APP SHELL ── */
+    #app {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .5s ease;
+    }
+
+    #app.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ── HEADER ── */
+    .app-header {
+      padding: calc(var(--safe-top) + .75rem) 1.25rem .5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+    }
+
+    .header-name {
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--text2);
+      letter-spacing: .02em;
+      max-width: 55%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .header-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      padding: .2rem .6rem;
+      border-radius: 20px;
+      color: var(--text2);
+      letter-spacing: .05em;
+    }
+
+    .header-badge.has-day {
+      color: var(--gold);
+      border-color: var(--gold2);
+    }
+
+    /* ── DOTS NAV ── */
+    .dot-nav {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      justify-content: center;
+      padding: .3rem 0 .5rem;
+      flex-shrink: 0;
+    }
+
+    .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--border2);
+      transition: all .3s cubic-bezier(.4, 0, .2, 1);
+      cursor: pointer;
+    }
+
+    .dot.active {
+      background: var(--gold);
+      width: 18px;
+      border-radius: 3px;
+    }
+
+    /* ── SWIPE CONTAINER ── */
+    .swipe-wrap {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      min-height: 0;
+    }
+
+    .screens-track {
+      display: flex;
+      height: 100%;
+      transition: transform .45s cubic-bezier(.4, 0, .2, 1);
+      will-change: transform;
+    }
+
+    .screen {
+      min-width: 100%;
+      height: 100%;
+      padding: 0 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: .6rem;
+      overflow: hidden;
+    }
+
+    /* ── SCREEN TITLE ── */
+    .screen-label {
+      font-size: .6rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--text3);
+      font-family: 'DM Mono', monospace;
+      padding-top: .25rem;
+      flex-shrink: 0;
+    }
+
+    .screen-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: .85rem 1rem;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .card-now {
+      border-color: var(--gold2);
+      background: var(--now-dim);
+    }
+
+    .card-lab {
+      border-color: var(--lab);
+      background: var(--lab-dim);
+    }
+
+    .card-free {
+      border-color: var(--border);
+      background: var(--bg);
+    }
+
+    .card-danger {
+      border-color: var(--danger);
+      background: var(--danger-dim);
+    }
+
+    .card-ok {
+      border-color: var(--border2);
+      background: var(--bg);
+    }
+
+    /* ── TIMETABLE SCREEN ── */
+    .tt-list {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: .45rem;
+      overflow: hidden;
+      min-height: 0;
+      justify-content: center;
+    }
+
+    .tt-item {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .7rem .85rem;
+      border-radius: var(--r2);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      position: relative;
+      transition: all .2s;
+      flex-shrink: 0;
+    }
+
+    .tt-item.is-now {
+      border-color: var(--gold2);
+      background: var(--now-dim);
+    }
+
+    .tt-item.is-lab {
+      border-color: var(--lab);
+      background: var(--lab-dim);
+    }
+
+    .tt-item.is-free {
+      opacity: .35;
+      border-color: transparent;
+      background: transparent;
+    }
+
+    .tt-item.is-done {
+      opacity: .4;
+    }
+
+    .tt-time {
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem;
+      color: var(--text2);
+      min-width: 72px;
+      line-height: 1.3;
+      flex-shrink: 0;
+    }
+
+    .tt-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--border2);
+      flex-shrink: 0;
+      transition: background .2s;
+    }
+
+    .tt-item.is-now .tt-dot {
+      background: var(--gold);
+      box-shadow: 0 0 6px var(--gold);
+    }
+
+    .tt-item.is-lab .tt-dot {
+      background: var(--lab);
+    }
+
+    .tt-item.is-free .tt-dot {
+      background: var(--text3);
+    }
+
+    .tt-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .tt-title {
+      font-size: .82rem;
+      font-weight: 600;
+      letter-spacing: -.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tt-item.is-free .tt-title {
+      color: var(--text3);
+      font-weight: 400;
+      font-family: 'DM Mono', monospace;
+      font-size: .7rem;
+    }
+
+    .tt-room {
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem;
+      color: var(--text2);
+      margin-top: .1rem;
+    }
+
+    .lab-pill {
+      font-family: 'DM Mono', monospace;
+      font-size: .55rem;
+      font-weight: 500;
+      background: rgba(123, 104, 238, .2);
+      color: var(--lab);
+      border: 1px solid rgba(123, 104, 238, .3);
+      padding: .1rem .4rem;
+      border-radius: 20px;
+      letter-spacing: .05em;
+      flex-shrink: 0;
+    }
+
+    .now-indicator {
+      font-family: 'DM Mono', monospace;
+      font-size: .55rem;
+      color: var(--gold);
+      letter-spacing: .08em;
+      flex-shrink: 0;
+    }
+
+    .progress-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 2px;
+      background: var(--gold);
+      border-radius: 0 1px 1px 0;
+      transition: width 1s linear;
+    }
+
+    /* ── ATTENDANCE SCREEN ── */
+    .att-list {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: .45rem;
+      overflow: hidden;
+      min-height: 0;
+      justify-content: center;
+    }
+
+    .att-item {
+      padding: .75rem .9rem;
+      border-radius: var(--r2);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      flex-shrink: 0;
+    }
+
+    .att-item.is-low {
+      border-color: var(--danger);
+      background: var(--danger-dim);
+    }
+
+    .att-pct-ring {
+      flex-shrink: 0;
+      width: 42px;
+      height: 42px;
+      position: relative;
+    }
+
+    .att-pct-ring svg {
+      position: absolute;
+      inset: 0;
+      transform: rotate(-90deg);
+    }
+
+    .ring-bg {
+      stroke: var(--border2);
+      fill: none;
+      stroke-width: 3;
+    }
+
+    .ring-fill {
+      fill: none;
+      stroke-width: 3;
+      stroke-linecap: round;
+      transition: stroke-dashoffset .6s ease;
+    }
+
+    .att-pct-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem;
+      font-weight: 500;
+    }
+
+    .att-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .att-title {
+      font-size: .8rem;
+      font-weight: 600;
+      letter-spacing: -.01em;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .att-margin {
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem;
+      margin-top: .2rem;
+    }
+
+    .att-margin.ok {
+      color: var(--ok);
+    }
+
+    .att-margin.low {
+      color: var(--danger);
+    }
+
+    .od-controls {
+      display: flex;
+      gap: .5rem;
+      flex-shrink: 0;
+      padding-top: .25rem;
+    }
+
+    .od-btn {
+      flex: 1;
+      padding: .55rem .5rem;
+      border-radius: var(--r2);
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem;
+      font-weight: 500;
+      letter-spacing: .04em;
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      color: var(--text2);
+      cursor: pointer;
+      text-align: center;
+      transition: all .2s;
+    }
+
+    .od-btn:active {
+      transform: scale(.97);
+    }
+
+    .od-btn.active-od {
+      border-color: var(--gold2);
+      color: var(--gold);
+      background: var(--now-dim);
+    }
+
+    .od-btn.active-bunk {
+      border-color: var(--danger);
+      color: var(--danger);
+      background: var(--danger-dim);
+    }
+
+    .od-btn.reset {
+      border-color: var(--border);
+      color: var(--text3);
+    }
+
+    /* ── MARKS SCREEN ── */
+    .marks-list {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: .45rem;
+      overflow: hidden;
+      min-height: 0;
+      justify-content: center;
+    }
+
+    .marks-item {
+      padding: .75rem .9rem;
+      border-radius: var(--r2);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    .marks-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: .5rem;
+    }
+
+    .marks-course {
+      font-size: .8rem;
+      font-weight: 600;
+      letter-spacing: -.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 65%;
+    }
+
+    .marks-total {
+      font-family: 'DM Mono', monospace;
+      font-size: .72rem;
+      color: var(--accent);
+    }
+
+    .marks-components {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .3rem;
+    }
+
+    .comp-chip {
+      font-family: 'DM Mono', monospace;
+      font-size: .6rem;
+      padding: .2rem .5rem;
+      border-radius: 20px;
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      color: var(--text2);
+    }
+
+    .comp-chip.low {
+      border-color: var(--danger);
+      color: var(--danger);
+      background: var(--danger-dim);
+    }
+
+    /* ── CALENDAR SCREEN ── */
+    .cal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .cal-month {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -.01em;
+    }
+
+    .cal-nav {
+      display: flex;
+      gap: .4rem;
+    }
+
+    .cal-nav-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: var(--r2);
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      color: var(--text2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .75rem;
+      transition: all .2s;
+    }
+
+    .cal-nav-btn:active {
+      transform: scale(.93);
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
+      flex-shrink: 0;
+    }
+
+    .cal-dow {
+      font-family: 'DM Mono', monospace;
+      font-size: .6rem;
+      color: var(--text3);
+      text-align: center;
+      padding: .3rem 0;
+    }
+
+    .cal-day {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      cursor: pointer;
+      position: relative;
+      transition: all .15s;
+      border: 1px solid transparent;
+    }
+
+    .cal-day:active {
+      transform: scale(.9);
+    }
+
+    .cal-day .d-num {
+      font-size: .72rem;
+      font-weight: 600;
+      line-height: 1;
+    }
+
+    .cal-day .d-order {
+      font-family: 'DM Mono', monospace;
+      font-size: .45rem;
+      color: var(--text3);
+      line-height: 1;
+      margin-top: 1px;
+    }
+
+    .cal-day.today {
+      border-color: var(--gold2);
+      background: var(--now-dim);
+    }
+
+    .cal-day.today .d-num {
+      color: var(--gold);
+    }
+
+    .cal-day.working {
+      background: var(--surface2);
+    }
+
+    .cal-day.working .d-order {
+      color: var(--text2);
+    }
+
+    .cal-day.holiday {
+      opacity: .3;
+    }
+
+    .cal-day.empty {
+      pointer-events: none;
+    }
+
+    .cal-day.selected-od {
+      border-color: var(--gold2);
+      background: var(--now-dim);
+    }
+
+    .cal-day.selected-bunk {
+      border-color: var(--danger);
+      background: var(--danger-dim);
+    }
+
+    .cal-day.selected-od .d-num,
+    .cal-day.selected-bunk .d-num {
+      color: var(--text);
+    }
+
+    .cal-confirm {
+      display: flex;
+      gap: .5rem;
+      flex-shrink: 0;
+      margin-top: auto;
+    }
+
+    .confirm-btn {
+      flex: 1;
+      padding: .65rem;
+      border-radius: var(--r2);
+      font-family: 'Syne', sans-serif;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      border: none;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .confirm-btn:active {
+      transform: scale(.97);
+    }
+
+    .confirm-btn.apply {
+      background: var(--gold);
+      color: #000;
+    }
+
+    .confirm-btn.cancel {
+      background: var(--surface2);
+      color: var(--text2);
+      border: 1px solid var(--border2);
+    }
+
+    .cal-mode-label {
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem;
+      color: var(--text2);
+      text-align: center;
+      padding: .2rem 0;
+      flex-shrink: 0;
+      letter-spacing: .05em;
+    }
+
+    .cal-mode-label span {
+      color: var(--gold);
+    }
+
+    /* ── WEEKLY TT SCREEN ── */
+    .wtt-tabs {
+      display: flex;
+      gap: .35rem;
+      flex-shrink: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: .1rem;
+    }
+
+    .wtt-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .wtt-tab {
+      flex-shrink: 0;
+      padding: .4rem .75rem;
+      border-radius: 20px;
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem;
+      font-weight: 500;
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      color: var(--text2);
+      cursor: pointer;
+      transition: all .2s;
+      white-space: nowrap;
+    }
+
+    .wtt-tab.active {
+      background: var(--gold);
+      color: #000;
+      border-color: var(--gold);
+    }
+
+    .wtt-tab:active {
+      transform: scale(.95);
+    }
+
+    /* ── LOADING OVERLAY ── */
+    #loading {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      transition: opacity .4s ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .load-logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--gold);
+      letter-spacing: -.02em;
+    }
+
+    .load-spinner {
+      width: 32px;
+      height: 32px;
+      border: 2px solid var(--border2);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    .load-text {
+      font-family: 'DM Mono', monospace;
+      font-size: .7rem;
+      color: var(--text3);
+      letter-spacing: .08em;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ── SWIPE HINT ── */
+    .swipe-hint {
+      position: fixed;
+      bottom: calc(var(--safe-bot) + 1rem);
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'DM Mono', monospace;
+      font-size: .6rem;
+      color: var(--text3);
+      letter-spacing: .1em;
+      pointer-events: none;
+      opacity: 1;
+      transition: opacity 1s;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+
+    .swipe-hint.gone {
+      opacity: 0;
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: calc(var(--safe-bot) + 1.5rem);
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface3);
+      border: 1px solid var(--border2);
+      border-radius: var(--r2);
+      padding: .55rem 1.1rem;
+      font-family: 'DM Mono', monospace;
+      font-size: .7rem;
+      color: var(--text);
+      opacity: 0;
+      transition: all .3s;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 200;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── SCROLLABLE INNER (for marks/att when many courses) ── */
+    .inner-scroll {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: .45rem;
+      scrollbar-width: none;
+      min-height: 0;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .inner-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* bottom safe area pad */
+    .screen {
+      padding-bottom: calc(var(--safe-bot) + .5rem);
+    }
+
+    /* stagger animation on screen enter */
+    .screen.entering .tt-item,
+    .screen.entering .att-item,
+    .screen.entering .marks-item,
+    .screen.entering .cal-grid,
+    .screen.entering .wtt-tab {
+      animation: fadeUp .35s ease both;
+    }
+
+    .screen.entering .tt-item:nth-child(1) {
+      animation-delay: .03s;
+    }
+
+    .screen.entering .tt-item:nth-child(2) {
+      animation-delay: .06s;
+    }
+
+    .screen.entering .tt-item:nth-child(3) {
+      animation-delay: .09s;
+    }
+
+    .screen.entering .tt-item:nth-child(4) {
+      animation-delay: .12s;
+    }
+
+    .screen.entering .tt-item:nth-child(5) {
+      animation-delay: .15s;
+    }
+
+    .screen.entering .tt-item:nth-child(6) {
+      animation-delay: .18s;
+    }
+
+    .screen.entering .att-item:nth-child(n) {
+      animation-delay: calc(n * .04s);
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- LOGIN -->
+  <div id="login-screen">
+    <div>
+      <div class="login-logo">Yet<span>Another</span><span>Academia</span></div>
+      <div class="login-subtitle" style="text-align:center;margin-top:.3rem;">student portal</div>
+    </div>
+    <form class="login-form" onsubmit="return false;">
+      <div class="input-wrap">
+        <span class="input-icon">✦</span>
+        <input id="inp-id" type="text" placeholder="Registration ID" autocomplete="username" />
+        <span class="login-suffix">@srmist.edu.in</span>
+      </div>
+      <div class="input-wrap">
+        <span class="input-icon">◆</span>
+        <input id="inp-pw" type="password" placeholder="Password" autocomplete="current-password" />
+      </div>
+      <button class="login-btn" onclick="doLogin()">SIGN IN</button>
+      <div class="login-error" id="login-err"></div>
+    </form>
+  </div>
+
+  <!-- LOADING -->
+  <div id="loading" class="hidden">
+    <div class="load-logo">◆</div>
+    <div class="load-spinner"></div>
+    <div class="load-text" id="load-msg">FETCHING DATA</div>
+  </div>
+
+  <!-- APP -->
+  <div id="app">
+    <div class="app-header">
+      <div class="header-name" id="hdr-name">—</div>
+      <div class="header-badge" id="hdr-day">—</div>
+    </div>
+
+    <div class="dot-nav" id="dot-nav"></div>
+
+    <div class="swipe-wrap" id="swipe-wrap">
+      <div class="screens-track" id="track">
+
+        <!-- S1: TODAY -->
+        <div class="screen" id="s-today">
+          <div class="screen-label">screen 01</div>
+          <div class="screen-title" id="s1-title">Today</div>
+          <div class="tt-list" id="tt-list"></div>
+        </div>
+
+        <!-- S2: ATTENDANCE -->
+        <div class="screen" id="s-att">
+          <div class="screen-label">screen 02</div>
+          <div class="screen-title">Attendance</div>
+          <div class="od-controls">
+            <div class="od-btn" id="od-btn" onclick="activateOD()">＋ OD Days</div>
+            <div class="od-btn" id="bunk-btn" onclick="activateBunk()">− Bunk Days</div>
+            <div class="od-btn reset" id="reset-btn" onclick="resetModifiers()" style="flex:.6;">Reset</div>
+          </div>
+          <div class="inner-scroll" id="att-list"></div>
+        </div>
+
+        <!-- S3: MARKS -->
+        <div class="screen" id="s-marks">
+          <div class="screen-label">screen 03</div>
+          <div class="screen-title">Marks</div>
+          <div class="inner-scroll" id="marks-list"></div>
+        </div>
+
+        <!-- S4: CALENDAR -->
+        <div class="screen" id="s-cal">
+          <div class="screen-label">screen 04</div>
+          <div class="cal-header">
+            <div class="cal-month" id="cal-month-label">—</div>
+            <div class="cal-nav">
+              <div class="cal-nav-btn" onclick="shiftMonth(-1)">‹</div>
+              <div class="cal-nav-btn" onclick="shiftMonth(1)">›</div>
+            </div>
+          </div>
+          <div class="cal-mode-label" id="cal-mode-label">Tap a working day to view its timetable</div>
+          <div class="cal-grid" id="cal-grid"></div>
+          <div class="cal-confirm" id="cal-confirm" style="display:none;">
+            <div class="confirm-btn cancel" onclick="cancelCalSelection()">Cancel</div>
+            <div class="confirm-btn apply" onclick="applyCalSelection()">Confirm</div>
+          </div>
+        </div>
+
+        <!-- S5: WEEKLY TT -->
+        <div class="screen" id="s-weekly">
+          <div class="screen-label">screen 05</div>
+          <div class="screen-title">Timetable</div>
+          <div class="wtt-tabs" id="wtt-tabs"></div>
+          <div class="tt-list" id="wtt-list"
+            style="justify-content:flex-start;gap:.4rem;overflow-y:auto;flex:1;scrollbar-width:none;-webkit-overflow-scrolling:touch;">
+          </div>
+        </div>
+
+      </div><!-- /track -->
+    </div><!-- /swipe-wrap -->
+  </div><!-- /app -->
+
+  <div class="swipe-hint" id="swipe-hint">← swipe →</div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ── CONFIG ─────────────────────────────────────────────────────────────────
+    const API = 'http://10.225.208.67:5000/api';
+    const SCREENS = 5;
+
+    // ── STATE ──────────────────────────────────────────────────────────────────
+    let appToken = localStorage.getItem('academia_token') || '';
+    let appData = null;
+    let curScreen = 0;
+    let calMode = null; // 'od' | 'bunk' | null
+    let calSelected = new Set();
+    let odDays = JSON.parse(localStorage.getItem('od_days') || '[]');
+    let bunkDays = JSON.parse(localStorage.getItem('bunk_days') || '[]');
+    let calViewMonth = new Date();
+    let activeWttDay = 'Day 1';
+    let jumpCalTarget = null; // day order to highlight after cal confirm
+
+    // ── SWIPE ──────────────────────────────────────────────────────────────────
+    const track = document.getElementById('track');
+    let touchX = 0, touchY = 0, isDragging = false, dragDelta = 0;
+    const wrap = document.getElementById('swipe-wrap');
+
+    wrap.addEventListener('touchstart', e => {
+      touchX = e.touches[0].clientX;
+      touchY = e.touches[0].clientY;
+      isDragging = true;
+      dragDelta = 0;
+      track.style.transition = 'none';
+    }, { passive: true });
+
+    wrap.addEventListener('touchmove', e => {
+      if (!isDragging) return;
+      const dx = e.touches[0].clientX - touchX;
+      const dy = e.touches[0].clientY - touchY;
+      if (Math.abs(dy) > Math.abs(dx) + 10) { isDragging = false; return; }
+      dragDelta = dx;
+      const base = -curScreen * 100;
+      const pct = (base + (dx / wrap.clientWidth) * 100);
+      track.style.transform = `translateX(${pct}%)`;
+    }, { passive: true });
+
+    wrap.addEventListener('touchend', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      track.style.transition = '';
+      const threshold = wrap.clientWidth * 0.22;
+      if (dragDelta < -threshold) goTo((curScreen + 1) % SCREENS);
+      else if (dragDelta > threshold) goTo((curScreen - 1 + SCREENS) % SCREENS);
+      else goTo(curScreen);
+    });
+
+    function goTo(idx, instant) {
+      const prev = curScreen;
+      curScreen = ((idx % SCREENS) + SCREENS) % SCREENS;
+      if (instant) { track.style.transition = 'none'; }
+      track.style.transform = `translateX(${-curScreen * 100}%)`;
+      updateDots();
+      if (curScreen !== prev) triggerEnterAnim(curScreen);
+      hideSHint();
+
+      // If going to weekly TT and jumpCalTarget set
+      if (curScreen === 4 && jumpCalTarget) {
+        setWttDay(jumpCalTarget);
+        jumpCalTarget = null;
+      }
+      // Exit cal mode if navigating away
+      if (curScreen !== 3 && calMode) {
+        calMode = null; calSelected.clear();
+        renderCalConfirm();
+        updateCalModeLabel();
+      }
+    }
+
+    function triggerEnterAnim(idx) {
+      const screens = document.querySelectorAll('.screen');
+      const s = screens[idx];
+      s.classList.remove('entering');
+      void s.offsetWidth;
+      s.classList.add('entering');
+      setTimeout(() => s.classList.remove('entering'), 600);
+    }
+
+    // ── DOTS ───────────────────────────────────────────────────────────────────
+    function buildDots() {
+      const nav = document.getElementById('dot-nav');
+      nav.innerHTML = '';
+      for (let i = 0; i < SCREENS; i++) {
+        const d = document.createElement('div');
+        d.className = 'dot' + (i === curScreen ? ' active' : '');
+        d.onclick = () => goTo(i);
+        nav.appendChild(d);
+      }
+    }
+    function updateDots() {
+      document.querySelectorAll('.dot').forEach((d, i) => {
+        d.className = 'dot' + (i === curScreen ? ' active' : '');
+      });
+    }
+
+    // ── LOGIN ──────────────────────────────────────────────────────────────────
+    async function doLogin() {
+      const id = document.getElementById('inp-id').value.trim();
+      const pw = document.getElementById('inp-pw').value;
+      const err = document.getElementById('login-err');
+      if (!id || !pw) { err.textContent = 'Enter your credentials.'; return; }
+      err.textContent = '';
+      showLoading('AUTHENTICATING');
+      try {
+        const r = await fetch(`${API}/login`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: id, password: pw })
+        });
+        const d = await r.json();
+        if (d.ok) {
+          appToken = d.token;
+          localStorage.setItem('academia_token', appToken);
+          document.getElementById('login-screen').classList.add('hidden');
+          await loadData();
+        } else {
+          hideLoading();
+          err.textContent = d.error || 'Login failed.';
+        }
+      } catch (e) {
+        hideLoading();
+        err.textContent = 'Connection error.';
+      }
+    }
+
+    // ── LOAD DATA ─────────────────────────────────────────────────────────────
+    async function loadData() {
+      showLoading('FETCHING DATA');
+      try {
+        const [prof, data] = await Promise.all([
+          fetch(`${API}/profile`, { headers: { 'X-Session-Token': appToken } }).then(r => r.json()),
+          fetch(`${API}/data`, { headers: { 'X-Session-Token': appToken } }).then(r => r.json())
+        ]);
+
+        if (!prof.ok || !data.ok) {
+          hideLoading();
+          if (!prof.ok) showLoginScreen();
+          return;
+        }
+
+        appData = data;
+        document.getElementById('hdr-name').textContent = prof.name.split(' ')[0] || prof.name;
+        const hdrDay = document.getElementById('hdr-day');
+        hdrDay.textContent = data.DayOrder || 'Holiday';
+        hdrDay.className = 'header-badge' + (data.DayOrder ? ' has-day' : '');
+
+        buildDots();
+        renderToday();
+        renderAttendance();
+        renderMarks();
+        renderCalendar();
+        renderWeeklyTabs();
+        renderWeeklyDay('Day 1');
+
+        hideLoading();
+        document.getElementById('app').classList.add('visible');
+        document.getElementById('login-screen').classList.add('hidden');
+
+        // Start live clock for today
+        setInterval(renderToday, 60000);
+
+      } catch (e) {
+        hideLoading();
+        showLoginScreen();
+      }
+    }
+
+    function showLoginScreen() {
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('app').classList.remove('visible');
+    }
+
+    // ── TODAY'S TIMETABLE ─────────────────────────────────────────────────────
+    function parseEndTime(ts) {
+      const m = ts.match(/\d{1,2}:\d{2}\s*-\s*(\d{1,2}):(\d{2})/);
+      return m ? { h: +m[1], min: +m[2] } : null;
+    }
+    function parseStartTime(ts) {
+      const m = ts.match(/(\d{1,2}):(\d{2})\s*-/);
+      return m ? { h: +m[1], min: +m[2] } : null;
+    }
+    function timeToMins(t) { return t ? t.h * 60 + t.min : 0; }
+
+    function renderToday() {
+      if (!appData) return;
+      const d = appData;
+      const dayKey = d.DayOrder;
+      const list = document.getElementById('tt-list');
+      const title = document.getElementById('s1-title');
+
+      title.textContent = dayKey ? `${dayKey}` : 'Holiday';
+
+      const now = new Date();
+      const nowMins = now.getHours() * 60 + now.getMinutes();
+
+      // Build slots 8:00 - 16:50
+      const CUTOFF_END = 16 * 60 + 50;
+      const CUTOFF_START = 8 * 60;
+
+      let items = [];
+      if (dayKey && d.Schedule[dayKey]) {
+        d.ActiveCols.forEach(i => {
+          const slot = d.Schedule[dayKey][i];
+          const end = parseEndTime(slot.time);
+          const start = parseStartTime(slot.time);
+          if (!end || !start) return;
+          const endM = timeToMins(end);
+          const startM = timeToMins(start);
+          if (endM > CUTOFF_END || startM < CUTOFF_START) return;
+          items.push({ ...slot, startM, endM });
+        });
+      }
+
+      // Fill free slots between classes
+      let full = [];
+      let prev = CUTOFF_START;
+      items.sort((a, b) => a.startM - b.startM);
+      items.forEach(item => {
+        if (item.startM > prev + 5) {
+          full.push({
+            free: true, startM: prev, endM: item.startM,
+            time: `${minsToTimeStr(prev)} - ${minsToTimeStr(item.startM)}`
+          });
+        }
+        full.push(item);
+        prev = item.endM;
+      });
+      if (prev < CUTOFF_END - 5) {
+        full.push({
+          free: true, startM: prev, endM: CUTOFF_END,
+          time: `${minsToTimeStr(prev)} - ${minsToTimeStr(CUTOFF_END)}`
+        });
+      }
+
+      if (full.length === 0) {
+        full.push({ free: true, startM: CUTOFF_START, endM: CUTOFF_END, time: '8:00 - 16:50' });
+      }
+
+      list.innerHTML = '';
+      full.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'tt-item';
+        const isNow = !item.free && nowMins >= item.startM && nowMins < item.endM;
+        const isDone = !item.free && nowMins >= item.endM;
+        if (item.free) div.classList.add('is-free');
+        else if (isNow) div.classList.add('is-now');
+        else if (item.isLab) div.classList.add('is-lab');
+        if (isDone) div.classList.add('is-done');
+
+        let progressHtml = '';
+        if (isNow && !item.free) {
+          const dur = item.endM - item.startM;
+          const elapsed = nowMins - item.startM;
+          const pct = Math.min(100, (elapsed / dur) * 100);
+          progressHtml = `<div class="progress-bar" style="width:${pct}%"></div>`;
+        }
+
+        div.innerHTML = `
+      <div class="tt-time">${formatTimeSlot(item.time)}</div>
+      <div class="tt-dot"></div>
+      <div class="tt-info">
+        <div class="tt-title">${item.free ? '— free —' : (item.title || '—')}</div>
+        ${!item.free && item.room ? `<div class="tt-room">${item.room}</div>` : ''}
+      </div>
+      ${item.isLab && !item.free ? '<div class="lab-pill">LAB</div>' : ''}
+      ${isNow ? '<div class="now-indicator">NOW</div>' : ''}
+      ${progressHtml}
+    `;
+        list.appendChild(div);
+      });
+    }
+
+    function minsToTimeStr(m) {
+      const h = Math.floor(m / 60), min = m % 60;
+      return `${h}:${String(min).padStart(2, '0')}`;
+    }
+    function formatTimeSlot(ts) {
+      // Shorten: "8:00 AM - 8:50 AM" -> "8:00\n8:50"
+      return ts.replace(/\s*(AM|PM)\s*/gi, '').trim().replace(' - ', '\n');
+    }
+
+    // ── ATTENDANCE ─────────────────────────────────────────────────────────────
+    function calcAttendance(raw) {
+      if (!appData) return [];
+      return raw.map(a => {
+        let conducted = parseInt(a.Conducted) || 0;
+        let attended = parseInt(a.Attended) || 0;
+
+        // Apply OD (mark as attended)
+        if (odDays.length > 0 && appData.Calendar) {
+          odDays.forEach(dateStr => {
+            const do_ = appData.Calendar[dateStr];
+            if (!do_ || !appData.Schedule[do_]) return;
+            appData.ActiveCols.forEach(i => {
+              const slot = appData.Schedule[do_][i];
+              if (slot && slot.title && slot.title.toLowerCase().includes(a.Title.toLowerCase().split(' ')[0].toLowerCase())) {
+                attended += 1;
+                conducted += 1;
+              }
+            });
+          });
+        }
+
+        // Apply bunk (mark as absent)
+        if (bunkDays.length > 0 && appData.Calendar) {
+          bunkDays.forEach(dateStr => {
+            const do_ = appData.Calendar[dateStr];
+            if (!do_ || !appData.Schedule[do_]) return;
+            appData.ActiveCols.forEach(i => {
+              const slot = appData.Schedule[do_][i];
+              if (slot && slot.title && slot.title.toLowerCase().includes(a.Title.toLowerCase().split(' ')[0].toLowerCase())) {
+                conducted += 1;
+                // not adding to attended = absent
+              }
+            });
+          });
+        }
+
+        const pct = conducted > 0 ? (attended / conducted) * 100 : 0;
+        const isLow = pct < 75;
+
+        let marginText = '';
+        if (isLow) {
+          // classes needed: (0.75*C - A) / 0.25 = 3A - 3C... solve: 3*(needed+A) >= (conducted+needed), => needed >= (0.75C - A)/0.25
+          const needed = Math.ceil((0.75 * conducted - attended) / 0.25);
+          marginText = `Required ${needed} class${needed !== 1 ? 'es' : ''}`;
+        } else {
+          // can bunk: A - 0.75*(C+bunk) >= 0 => bunk <= (A - 0.75C)/0.75
+          const canBunk = Math.floor((attended - 0.75 * conducted) / 0.75);
+          marginText = `Margin ${Math.max(0, canBunk)} class${canBunk !== 1 ? 'es' : ''}`;
+        }
+
+        return { ...a, pct, isLow, marginText, effConducted: conducted, effAttended: attended };
+      });
+    }
+
+    function renderAttendance() {
+      if (!appData) return;
+      const list = document.getElementById('att-list');
+      const processed = calcAttendance(appData.Attendance);
+      list.innerHTML = '';
+      processed.forEach(a => {
+        const div = document.createElement('div');
+        div.className = 'att-item' + (a.isLow ? ' is-low' : '');
+        const pct = Math.round(a.pct);
+        const circ = 2 * Math.PI * 15; // r=15
+        const offset = circ - (pct / 100) * circ;
+        const strokeColor = a.isLow ? 'var(--danger)' : pct >= 85 ? 'var(--ok)' : 'var(--warn)';
+        div.innerHTML = `
+      <div class="att-pct-ring">
+        <svg viewBox="0 0 36 36" width="42" height="42">
+          <circle class="ring-bg" cx="18" cy="18" r="15"/>
+          <circle class="ring-fill" cx="18" cy="18" r="15"
+            stroke="${strokeColor}"
+            stroke-dasharray="${circ}"
+            stroke-dashoffset="${offset}"/>
+        </svg>
+        <div class="att-pct-text" style="color:${strokeColor}">${pct}%</div>
+      </div>
+      <div class="att-info">
+        <div class="att-title">${a.Title}</div>
+        <div class="att-margin ${a.isLow ? 'low' : 'ok'}">${a.marginText}</div>
+      </div>
+    `;
+        list.appendChild(div);
+      });
+    }
+
+    // OD / Bunk flow
+    function activateOD() {
+      calMode = 'od'; calSelected = new Set(odDays);
+      document.getElementById('od-btn').classList.add('active-od');
+      document.getElementById('bunk-btn').classList.remove('active-bunk');
+      goTo(3);
+      renderCalendar();
+      renderCalConfirm();
+      updateCalModeLabel();
+    }
+    function activateBunk() {
+      calMode = 'bunk'; calSelected = new Set(bunkDays);
+      document.getElementById('bunk-btn').classList.add('active-bunk');
+      document.getElementById('od-btn').classList.remove('active-od');
+      goTo(3);
+      renderCalendar();
+      renderCalConfirm();
+      updateCalModeLabel();
+    }
+    function resetModifiers() {
+      odDays = []; bunkDays = [];
+      calMode = null; calSelected.clear();
+      localStorage.removeItem('od_days'); localStorage.removeItem('bunk_days');
+      document.getElementById('od-btn').classList.remove('active-od');
+      document.getElementById('bunk-btn').classList.remove('active-bunk');
+      renderAttendance();
+      renderCalendar();
+      renderCalConfirm();
+      updateCalModeLabel();
+      showToast('Modifiers reset');
+    }
+    function applyCalSelection() {
+      if (calMode === 'od') {
+        odDays = [...calSelected];
+        localStorage.setItem('od_days', JSON.stringify(odDays));
+      } else if (calMode === 'bunk') {
+        bunkDays = [...calSelected];
+        localStorage.setItem('bunk_days', JSON.stringify(bunkDays));
+      }
+      calMode = null;
+      renderCalConfirm();
+      updateCalModeLabel();
+      renderAttendance();
+      goTo(1);
+      showToast('Applied');
+    }
+    function cancelCalSelection() {
+      calMode = null; calSelected.clear();
+      document.getElementById('od-btn').classList.remove('active-od');
+      document.getElementById('bunk-btn').classList.remove('active-bunk');
+      renderCalConfirm();
+      updateCalModeLabel();
+      goTo(1);
+    }
+    function renderCalConfirm() {
+      document.getElementById('cal-confirm').style.display = calMode ? 'flex' : 'none';
+    }
+    function updateCalModeLabel() {
+      const lbl = document.getElementById('cal-mode-label');
+      if (calMode === 'od') lbl.innerHTML = 'Select your <span>OD days</span>';
+      else if (calMode === 'bunk') lbl.innerHTML = 'Select days to <span style="color:var(--danger)">bunk</span>';
+      else lbl.innerHTML = 'Tap a working day to view timetable';
+    }
+
+    // ── MARKS ──────────────────────────────────────────────────────────────────
+    function renderMarks() {
+      if (!appData) return;
+      const list = document.getElementById('marks-list');
+      list.innerHTML = '';
+      appData.Marks.forEach(m => {
+        const valid = m.Components.filter(c => c.scored !== null && c.max !== null);
+        const totalScored = valid.reduce((s, c) => s + c.scored, 0);
+        const totalMax = valid.reduce((s, c) => s + c.max, 0);
+        const div = document.createElement('div');
+        div.className = 'marks-item';
+        const chips = valid.map(c => {
+          const isLow = c.max > 0 && (c.scored / c.max) < 0.5;
+          return `<div class="comp-chip${isLow ? ' low' : ''}">${c.name}: ${c.scored}/${c.max}</div>`;
+        }).join('');
+        div.innerHTML = `
+      <div class="marks-header">
+        <div class="marks-course">${m.Title}</div>
+        ${totalMax > 0 ? `<div class="marks-total">${totalScored}/${totalMax}</div>` : ''}
+      </div>
+      <div class="marks-components">${chips || '<span style="color:var(--text3);font-family:\'DM Mono\',monospace;font-size:.65rem;">No marks yet</span>'}</div>
+    `;
+        list.appendChild(div);
+      });
+    }
+
+    // ── CALENDAR ────────────────────────────────────────────────────────────────
+    const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+    function shiftMonth(delta) {
+      calViewMonth = new Date(calViewMonth.getFullYear(), calViewMonth.getMonth() + delta, 1);
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      if (!appData) return;
+      const y = calViewMonth.getFullYear(), mo = calViewMonth.getMonth();
+      document.getElementById('cal-month-label').textContent = `${MONTHS[mo]} ${y}`;
+
+      const grid = document.getElementById('cal-grid');
+      grid.innerHTML = '';
+      DAYS.forEach(d => {
+        const el = document.createElement('div');
+        el.className = 'cal-dow'; el.textContent = d;
+        grid.appendChild(el);
+      });
+
+      const firstDay = new Date(y, mo, 1).getDay();
+      const daysInMonth = new Date(y, mo + 1, 0).getDate();
+      const today = new Date();
+
+      for (let i = 0; i < firstDay; i++) {
+        const el = document.createElement('div');
+        el.className = 'cal-day empty';
+        grid.appendChild(el);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${y}-${String(mo + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const do_ = appData.Calendar[dateStr];
+        const isToday = (day === today.getDate() && mo === today.getMonth() && y === today.getFullYear());
+        const isWorking = !!do_;
+        const isHoliday = !isWorking;
+        const isSelectedOD = odDays.includes(dateStr);
+        const isSelectedBunk = bunkDays.includes(dateStr);
+        const isCalSel = calSelected.has(dateStr);
+
+        const el = document.createElement('div');
+        el.className = 'cal-day';
+        if (isToday) el.classList.add('today');
+        if (isWorking) el.classList.add('working');
+        else el.classList.add('holiday');
+        if (calMode && isCalSel) {
+          el.classList.add(calMode === 'od' ? 'selected-od' : 'selected-bunk');
+        } else if (!calMode && isSelectedOD) el.classList.add('selected-od');
+        else if (!calMode && isSelectedBunk) el.classList.add('selected-bunk');
+
+        el.innerHTML = `<div class="d-num">${day}</div>${isWorking ? `<div class="d-order">${do_.replace('Day ', '')}</div>` : ''}`;
+
+        el.onclick = () => {
+          if (calMode) {
+            if (calSelected.has(dateStr)) calSelected.delete(dateStr);
+            else if (isWorking) calSelected.add(dateStr);
+            renderCalendar();
+          } else if (isWorking) {
+            // Jump to screen 5 with this day's timetable
+            jumpCalTarget = do_;
+            goTo(4);
+          }
+        };
+        grid.appendChild(el);
+      }
+    }
+
+    // ── WEEKLY TT ─────────────────────────────────────────────────────────────
+    function renderWeeklyTabs() {
+      if (!appData) return;
+      const tabs = document.getElementById('wtt-tabs');
+      tabs.innerHTML = '';
+      ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'].forEach(day => {
+        if (!appData.Schedule[day]) return;
+        const t = document.createElement('div');
+        t.className = 'wtt-tab' + (day === activeWttDay ? ' active' : '');
+        t.textContent = day;
+        t.onclick = () => setWttDay(day);
+        tabs.appendChild(t);
+      });
+    }
+
+    function setWttDay(day) {
+      activeWttDay = day;
+      renderWeeklyTabs();
+      renderWeeklyDay(day);
+    }
+
+    function renderWeeklyDay(day) {
+      if (!appData) return;
+      const list = document.getElementById('wtt-list');
+      list.innerHTML = '';
+      const slots = appData.Schedule[day];
+      if (!slots) { list.innerHTML = '<div style="color:var(--text3);font-family:\'DM Mono\',monospace;font-size:.75rem;padding:1rem 0;">No classes</div>'; return; }
+
+      let hasAny = false;
+      appData.ActiveCols.forEach(i => {
+        const s = slots[i];
+        if (!s || !s.title) return;
+        const end = parseEndTime(s.time);
+        if (end && timeToMins(end) > 16 * 60 + 50) return;
+        hasAny = true;
+        const div = document.createElement('div');
+        div.className = 'tt-item' + (s.isLab ? ' is-lab' : '');
+        div.innerHTML = `
+      <div class="tt-time">${formatTimeSlot(s.time)}</div>
+      <div class="tt-dot"></div>
+      <div class="tt-info">
+        <div class="tt-title">${s.title}</div>
+        ${s.room ? `<div class="tt-room">${s.room}</div>` : ''}
+      </div>
+      ${s.isLab ? '<div class="lab-pill">LAB</div>' : ''}
+    `;
+        list.appendChild(div);
+      });
+      if (!hasAny) {
+        list.innerHTML = '<div style="color:var(--text3);font-family:\'DM Mono\',monospace;font-size:.75rem;padding:1rem 0;">No classes scheduled</div>';
+      }
+    }
+
+    // ── UTILS ──────────────────────────────────────────────────────────────────
+    function showLoading(msg) {
+      document.getElementById('load-msg').textContent = msg || 'LOADING';
+      document.getElementById('loading').classList.remove('hidden');
+    }
+    function hideLoading() {
+      document.getElementById('loading').classList.add('hidden');
+    }
+    let toastTimer;
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+    }
+    function hideSHint() {
+      document.getElementById('swipe-hint').classList.add('gone');
+    }
+
+    // ── BOOT ──────────────────────────────────────────────────────────────────
+    (async () => {
+      buildDots();
+      if (appToken) {
+        showLoading('LOADING');
+        // Quick auth check
+        try {
+          const p = await fetch(`${API}/profile`, { headers: { 'X-Session-Token': appToken } });
+          const pj = await p.json();
+          if (pj.ok) {
+            document.getElementById('login-screen').classList.add('hidden');
+            await loadData();
+            return;
+          }
+        } catch (e) { }
+        hideLoading();
+      }
+      // Show login
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('loading').classList.add('hidden');
+
+      setTimeout(() => document.getElementById('swipe-hint').classList.add('gone'), 4000);
+    })();
+  </script>
+</body>
+
+</html>
