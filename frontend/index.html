@@ -81,23 +81,22 @@
     }
 
     .login-logo {
-      font-size: 2rem;
+      font-size: 3.5rem;
       font-weight: 800;
-      letter-spacing: -.02em;
+      letter-spacing: -.04em;
       color: var(--gold);
-    }
-
-    .login-logo span {
-      color: var(--text2);
-      font-weight: 400;
+      line-height: 1;
+      text-align: center;
     }
 
     .login-subtitle {
-      font-size: .75rem;
-      color: var(--text3);
-      letter-spacing: .15em;
-      text-transform: uppercase;
       font-family: 'DM Mono', monospace;
+      font-size: .7rem;
+      color: var(--text3);
+      letter-spacing: .12em;
+      text-align: center;
+      margin-top: .5rem;
+      text-transform: uppercase;
     }
 
     .login-form {
@@ -188,7 +187,6 @@
       flex-direction: column;
       opacity: 0;
       pointer-events: none;
-      transition: opacity .5s ease;
     }
 
     #app.visible {
@@ -379,10 +377,6 @@
       background: transparent;
     }
 
-    .tt-item.is-done {
-      opacity: .4;
-    }
-
     .tt-time {
       font-family: 'DM Mono', monospace;
       font-size: .65rem;
@@ -484,8 +478,15 @@
       justify-content: center;
     }
 
+    /* ── ATTENDANCE ── */
+    #att-list {
+      display: flex;
+      flex-direction: column;
+      gap: .35rem;
+    }
+
     .att-item {
-      padding: .4rem .7rem;
+      padding: .55rem .7rem;
       border-radius: var(--r2);
       border: 1px solid var(--border);
       background: var(--surface);
@@ -1182,8 +1183,8 @@
   <!-- LOGIN -->
   <div id="login-screen">
     <div>
-      <div class="login-logo">Yet<span>Another</span><span>Academia</span></div>
-      <div class="login-subtitle" style="text-align:center;margin-top:.3rem;">student portal</div>
+      <div class="login-logo">YAA</div>
+      <div class="login-subtitle">Yet Another Academia</div>
     </div>
     <form class="login-form" onsubmit="return false;">
       <div class="input-wrap">
@@ -1306,6 +1307,26 @@
     const IS_DESKTOP = () => window.innerWidth >= 768;
     const CARD_W = 420, CARD_GAP = 20;
 
+    // INFINITE SWIPE SETUP
+    // Clone first and last screens for seamless wrapping
+    const origScreens = [...track.children];
+    const cloneFirst = origScreens[0].cloneNode(true);
+    const cloneLast = origScreens[SCREENS - 1].cloneNode(true);
+    cloneFirst.classList.add('clone');
+    cloneLast.classList.add('clone');
+    track.appendChild(cloneFirst); // Index SCREENS (e.g. 5)
+    track.insertBefore(cloneLast, origScreens[0]); // Index -1 (visually), but flex is left-to-right.
+    // Wait, simpler approach: we don't change flex order, so actual DOM children:
+    // [0]: cloneLast (S5)
+    // [1]: real S1 ... [5]: real S5
+    // [6]: cloneFirst (S1)
+
+    // We adjust let curScreen to be 1-based internally for the DOM, but keep business logic 0-based.
+    let domIndex = 1; // 1 to SCREENS
+
+    // Real screen elements for click/UI updates
+    const getRealScreens = () => [...track.children].slice(1, SCREENS + 1);
+
     // Mobile touch swipe
     wrap.addEventListener('touchstart', e => {
       if (IS_DESKTOP()) return;
@@ -1319,15 +1340,15 @@
       const dy = e.touches[0].clientY - touchY;
       if (Math.abs(dy) > Math.abs(dx) + 10) { isDragging = false; return; }
       dragDelta = dx;
-      track.style.transform = `translateX(${-curScreen * 100 + (dx / wrap.clientWidth) * 100}%)`;
+      track.style.transform = `translateX(calc(${-domIndex * 100}vw + ${dx}px))`;
     }, { passive: true });
     wrap.addEventListener('touchend', () => {
       if (!isDragging || IS_DESKTOP()) return;
       isDragging = false; track.style.transition = '';
       const thr = wrap.clientWidth * 0.22;
-      if (dragDelta < -thr && curScreen < SCREENS - 1) goTo(curScreen + 1);
-      else if (dragDelta > thr && curScreen > 0) goTo(curScreen - 1);
-      else goTo(curScreen);
+      if (dragDelta < -thr) doNav(domIndex + 1);
+      else if (dragDelta > thr) doNav(domIndex - 1);
+      else doNav(domIndex);
     });
 
     // Desktop: mouse wheel
@@ -1338,59 +1359,94 @@
       if (wheelCD) return;
       wheelCD = true; setTimeout(() => wheelCD = false, 500);
       const d = e.deltaX || e.deltaY;
-      if (d > 25 && curScreen < SCREENS - 1) goTo(curScreen + 1);
-      else if (d < -25 && curScreen > 0) goTo(curScreen - 1);
+      if (d > 25) doNav(domIndex + 1);
+      else if (d < -25) doNav(domIndex - 1);
     }, { passive: false });
 
     // Keyboard
     document.addEventListener('keydown', e => {
       if (!document.getElementById('login-screen').classList.contains('hidden')) return;
-      if (e.key === 'ArrowRight') { e.preventDefault(); goTo(curScreen + 1); }
-      if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(curScreen - 1); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); doNav(domIndex + 1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); doNav(domIndex - 1); }
     });
 
     // Click adjacent card on desktop
-    document.querySelectorAll('.screen').forEach((s, i) => {
-      s.addEventListener('click', () => { if (IS_DESKTOP() && i !== curScreen) goTo(i); });
+    getRealScreens().forEach((s, i) => {
+      s.addEventListener('click', () => { if (IS_DESKTOP() && i !== curScreen) doNav(i + 1); });
     });
 
+    // Outer navigation function handling the infinite wrap logic
+    function doNav(targetDomIdx) {
+      if (IS_DESKTOP()) {
+        // Desert infinite wrap on desktop layout as it relies on transforms that conflict with cards
+        // Just clamp the desktop nav
+        let target = targetDomIdx - 1;
+        target = Math.max(0, Math.min(SCREENS - 1, target));
+        goToCore(target + 1, false);
+        return;
+      }
+
+      // Mobile infinite wrap
+      goToCore(targetDomIdx, false);
+
+      // If we stepped onto a clone, silently jump to the core copy after transition
+      if (targetDomIdx === 0) {
+        setTimeout(() => goToCore(SCREENS, true), 350);
+      } else if (targetDomIdx === SCREENS + 1) {
+        setTimeout(() => goToCore(1, true), 350);
+      }
+    }
+
+    // Direct interface for edge UI (like arrows)
+    function goTo(idx) {
+      doNav(idx + 1);
+    }
+
     function applyTransform(instant) {
-      const els = [...document.querySelectorAll('.screen')];
+      const els = [...track.children];
       if (!IS_DESKTOP()) {
-        track.style.transition = instant ? 'none' : '';
-        track.style.transform = `translateX(${-curScreen * 100}%)`;
+        track.style.transition = instant ? 'none' : 'transform .35s ease';
+        track.style.transform = `translateX(${-domIndex * 100}vw)`;
         track.style.gap = '';
         els.forEach(s => s.className = s.className.replace(/(desk-active|desk-near|desk-far)/g, '').trim());
         return;
       }
+      // Desktop logic
       const viewW = wrap.clientWidth;
-      const offset = (viewW / 2) - (CARD_W / 2) - curScreen * (CARD_W + CARD_GAP);
+      const offset = (viewW / 2) - (CARD_W / 2) - domIndex * (CARD_W + CARD_GAP);
       track.style.transition = instant ? 'none' : 'transform .45s cubic-bezier(.4,0,.2,1)';
       track.style.transform = `translateX(${offset}px)`;
       track.style.gap = CARD_GAP + 'px';
-      els.forEach((s, i) => {
+      els.forEach((s, idx) => {
         s.classList.remove('desk-active', 'desk-near', 'desk-far');
-        const d = Math.abs(i - curScreen);
+        const d = Math.abs(idx - domIndex);
+        // Special case for clones to be active if we are wrapped to them
         if (d === 0) s.classList.add('desk-active');
-        else if (d === 1) s.classList.add('desk-near');
+        else if (d === 1 || (idx === SCREENS + 1 && domIndex === 1) || (idx === 0 && domIndex === SCREENS)) s.classList.add('desk-near');
         else s.classList.add('desk-far');
       });
     }
-    window.addEventListener('resize', () => applyTransform());
+    window.addEventListener('resize', () => applyTransform(true));
 
-    function goTo(idx, instant) {
+    function goToCore(idx, instant) {
       const prev = curScreen;
-      curScreen = Math.max(0, Math.min(SCREENS - 1, idx));
+      domIndex = idx;
+      // calc logic screen mapping (0-4) where 0=S1, 4=S5
+      if (domIndex === 0) curScreen = SCREENS - 1;
+      else if (domIndex === SCREENS + 1) curScreen = 0;
+      else curScreen = domIndex - 1;
+
       applyTransform(instant);
       updateDots();
-      if (curScreen !== prev) triggerEnterAnim(curScreen);
+      if (curScreen !== prev && !instant) triggerEnterAnim(domIndex);
       hideSHint();
+
       if (curScreen === 4 && jumpCalTarget) { setWttDay(jumpCalTarget); jumpCalTarget = null; }
       if (curScreen !== 3 && calMode) { calMode = null; calSelected.clear(); renderCalConfirm(); updateCalModeLabel(); }
     }
 
     function triggerEnterAnim(idx) {
-      const s = document.querySelectorAll('.screen')[idx];
+      const s = [...track.children][idx];
       if (!s) return;
       s.classList.remove('entering'); void s.offsetWidth;
       s.classList.add('entering');
@@ -1465,7 +1521,7 @@
         hdrDay.className = 'header-badge' + (data.DayOrder ? ' has-day' : '');
 
         buildDots();
-        setTimeout(() => applyTransform(), 50);
+        goToCore(domIndex, true); // Initialize track position
         renderToday();
         renderAttendance();
         renderMarks();
@@ -1765,11 +1821,38 @@
       return isNaN(n) ? null : n;
     }
 
+    // Build a map from partial course code -> full title from attendance data
+    function buildCourseTitleMap() {
+      if (!appData || !appData.Attendance) return {};
+      const map = {};
+      appData.Attendance.forEach(a => {
+        if (a.Code) map[a.Code.toUpperCase()] = a.Title;
+        // also store first 8 chars of code as key for fuzzy match
+        if (a.Code && a.Code.length > 4) map[a.Code.slice(0, -1).toUpperCase()] = a.Title;
+      });
+      return map;
+    }
+
     function renderMarks() {
       if (!appData) return;
       const list = document.getElementById('marks-list');
       list.innerHTML = '';
+      const attMap = buildCourseTitleMap();
       appData.Marks.forEach(m => {
+        // Try to resolve a prettier title from attendance map
+        let displayTitle = m.Title;
+        if (appData.Attendance) {
+          // m.Title might be a course code like '21CSE281T' or already resolved
+          const upper = m.Title.toUpperCase();
+          if (attMap[upper]) {
+            displayTitle = attMap[upper];
+          } else {
+            // Try stripping last char suffix T/P/L/J
+            const base = upper.replace(/[TPLJ]$/, '');
+            const match = Object.entries(attMap).find(([k]) => k === base || k.startsWith(base) || base.startsWith(k));
+            if (match) displayTitle = match[1];
+          }
+        }
         const valid = m.Components.filter(c => numVal(c.scored) !== null && numVal(c.max) !== null);
         const totalScored = valid.reduce((s, c) => s + numVal(c.scored), 0);
         const totalMax = valid.reduce((s, c) => s + numVal(c.max), 0);
@@ -1782,7 +1865,7 @@
         }).join('');
         div.innerHTML = `
       <div class="marks-header">
-        <div class="marks-course">${m.Title}</div>
+        <div class="marks-course">${displayTitle}</div>
         ${totalMax > 0 ? `<div class="marks-total">${totalScored}/${totalMax}</div>` : ''}
       </div>
       <div class="marks-components">${chips || '<span style="color:var(--text3);font-family:\'DM Mono\',monospace;font-size:.65rem;">No marks yet</span>'}</div>
@@ -1796,21 +1879,19 @@
     const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
     function shiftMonth(delta) {
-      calViewMonth = new Date(calViewMonth.getFullYear(), calViewMonth.getMonth() + delta, 1);
+      const dates = Object.keys(appData.Calendar || {}).sort();
+      const [minY, minM] = dates.length ? dates[0].split('-').map(Number) : [calViewMonth.getFullYear(), calViewMonth.getMonth() + 1];
+      const [maxY, maxM] = dates.length ? dates[dates.length - 1].split('-').map(Number) : [calViewMonth.getFullYear(), calViewMonth.getMonth() + 1];
+      const next = new Date(calViewMonth.getFullYear(), calViewMonth.getMonth() + delta, 1);
+      // Constrain to semester bounds
+      if (next.getFullYear() < minY || (next.getFullYear() === minY && next.getMonth() + 1 < minM)) return;
+      if (next.getFullYear() > maxY || (next.getFullYear() === maxY && next.getMonth() + 1 > maxM)) return;
+      calViewMonth = next;
       renderCalendar();
     }
 
     function renderCalendar() {
       if (!appData) return;
-      // Auto-set calViewMonth to first month with calendar data on first render
-      if (!renderCalendar._init) {
-        renderCalendar._init = true;
-        const dates = Object.keys(appData.Calendar).sort();
-        if (dates.length) {
-          const [y, m] = dates[0].split('-').map(Number);
-          calViewMonth = new Date(y, m - 1, 1);
-        }
-      }
       const y = calViewMonth.getFullYear(), mo = calViewMonth.getMonth();
       document.getElementById('cal-month-label').textContent = `${MONTHS[mo]} ${y}`;
 
@@ -1897,12 +1978,39 @@
       const slots = appData.Schedule[day];
       if (!slots) { list.innerHTML = '<div style="color:var(--text3);font-family:\'DM Mono\',monospace;font-size:.75rem;padding:1rem 0;">No classes</div>'; return; }
 
+      const CUTOFF_START = 8 * 60, CUTOFF_END = 16 * 60 + 50;
       let hasAny = false;
+      let firstStart = null;
+
+      // Pre-scan to find first class start
+      appData.ActiveCols.forEach(i => {
+        const s = slots[i];
+        if (!s || !s.title) return;
+        const st = parseStartTime(s.time);
+        const en = parseEndTime(s.time);
+        if (!st || !en) return;
+        if (timeToMins(en) > CUTOFF_END) return;
+        const sm = timeToMins(st);
+        if (firstStart === null || sm < firstStart) firstStart = sm;
+      });
+
+      // Show early free block if day starts late (>60 min gap)
+      if (firstStart !== null && firstStart - CUTOFF_START > 60) {
+        const freeDiv = document.createElement('div');
+        freeDiv.className = 'tt-item is-free';
+        freeDiv.innerHTML = `
+          <div class="tt-time">${minsToTimeStr(CUTOFF_START)}\n${minsToTimeStr(firstStart)}</div>
+          <div class="tt-dot"></div>
+          <div class="tt-info"><div class="tt-title">— free —</div></div>
+        `;
+        list.appendChild(freeDiv);
+      }
+
       appData.ActiveCols.forEach(i => {
         const s = slots[i];
         if (!s || !s.title) return;
         const end = parseEndTime(s.time);
-        if (end && timeToMins(end) > 16 * 60 + 50) return;
+        if (end && timeToMins(end) > CUTOFF_END) return;
         hasAny = true;
         const div = document.createElement('div');
         div.className = 'tt-item' + (s.isLab ? ' is-lab' : '');

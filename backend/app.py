@@ -308,14 +308,12 @@ def get_data():
                         break
                 if match:
                     has_class[i] = True
-                # detect lab: ' / X' multi-slot pattern or L-prefix codes
+                # detect lab: slots starting with 'P'
                 is_lab = False
-                if ' / ' in slot_str:
+                clean = slot_str.strip()
+                if clean.upper().startswith('P'):
                     is_lab = True
-                else:
-                    clean = slot_str.strip()
-                    if re.match(r'^L\d+', clean, re.I):
-                        is_lab = True
+                
                 grid[day].append({
                     "time": times[i] if i < len(times) else "",
                     "title": match["Title"] if match else None,
