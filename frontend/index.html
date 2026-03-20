@@ -32,8 +32,8 @@
       --ok-dim: rgba(68, 204, 119, 0.10);
       --warn: #ffaa00;
       --warn-dim: rgba(255, 170, 0, 0.10);
-      --lab: #7b68ee;
-      --lab-dim: rgba(123, 104, 238, 0.12);
+      --lab: #2ecc71;
+      --lab-dim: rgba(46, 204, 113, 0.12);
       --now: #c9a84c;
       --now-dim: rgba(201, 168, 76, 0.12);
       --r: 12px;
@@ -446,9 +446,9 @@
       font-family: 'DM Mono', monospace;
       font-size: .55rem;
       font-weight: 500;
-      background: rgba(123, 104, 238, .2);
+      background: rgba(46, 204, 113, .15);
       color: var(--lab);
-      border: 1px solid rgba(123, 104, 238, .3);
+      border: 1px solid rgba(46, 204, 113, .3);
       padding: .1rem .4rem;
       border-radius: 20px;
       letter-spacing: .05em;
@@ -485,13 +485,13 @@
     }
 
     .att-item {
-      padding: .75rem .9rem;
+      padding: .4rem .7rem;
       border-radius: var(--r2);
       border: 1px solid var(--border);
       background: var(--surface);
       display: flex;
       align-items: center;
-      gap: .75rem;
+      gap: .5rem;
       flex-shrink: 0;
     }
 
@@ -502,8 +502,8 @@
 
     .att-pct-ring {
       flex-shrink: 0;
-      width: 42px;
-      height: 42px;
+      width: 32px;
+      height: 32px;
       position: relative;
     }
 
@@ -533,7 +533,7 @@
       align-items: center;
       justify-content: center;
       font-family: 'DM Mono', monospace;
-      font-size: .65rem;
+      font-size: .55rem;
       font-weight: 500;
     }
 
@@ -543,10 +543,10 @@
     }
 
     .att-title {
-      font-size: .8rem;
+      font-size: .72rem;
       font-weight: 600;
       letter-spacing: -.01em;
-      line-height: 1.2;
+      line-height: 1.1;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -554,8 +554,8 @@
 
     .att-margin {
       font-family: 'DM Mono', monospace;
-      font-size: .65rem;
-      margin-top: .2rem;
+      font-size: .58rem;
+      margin-top: .1rem;
     }
 
     .att-margin.ok {
@@ -1050,6 +1050,130 @@
         transform: translateY(0);
       }
     }
+
+    /* ── DESKTOP CARD-DOCK ── */
+    .desk-arrow {
+      display: none;
+      position: fixed;
+      top: 50%;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      color: var(--text3);
+      cursor: pointer;
+      z-index: 20;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      transition: all .2s;
+      transform: translateY(-50%);
+      user-select: none;
+    }
+
+    .desk-arrow:hover {
+      background: var(--surface3);
+      border-color: var(--gold2);
+      color: var(--gold);
+    }
+
+    .desk-arrow:active {
+      transform: translateY(-50%) scale(.9);
+    }
+
+    #arr-left {
+      left: .75rem;
+    }
+
+    #arr-right {
+      right: .75rem;
+    }
+
+    @media(min-width:768px) {
+      .swipe-wrap {
+        overflow: visible;
+      }
+
+      .screens-track {
+        gap: 20px;
+      }
+
+      .screen {
+        --card-w: 420px;
+        min-width: var(--card-w);
+        max-width: var(--card-w);
+        padding: .75rem 1.25rem 1rem;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        flex-shrink: 0;
+        opacity: 0;
+        transform: scale(.88) translateY(6px);
+        filter: blur(2px);
+        pointer-events: none;
+        transition: opacity .4s, transform .4s, filter .4s;
+      }
+
+      .screen.desk-active {
+        opacity: 1;
+        transform: scale(1);
+        filter: none;
+        pointer-events: all;
+        border-color: var(--border2);
+      }
+
+      .screen.desk-near {
+        opacity: .45;
+        transform: scale(.95) translateY(3px);
+        filter: blur(.5px);
+        pointer-events: all;
+        cursor: pointer;
+      }
+
+      .screen.desk-near:hover {
+        opacity: .6;
+        transform: scale(.96) translateY(2px);
+      }
+
+      .screen.desk-far {
+        opacity: .15;
+        transform: scale(.91) translateY(5px);
+        filter: blur(1.5px);
+        pointer-events: none;
+      }
+
+      .desk-arrow {
+        display: flex;
+      }
+
+      .dot {
+        width: 6px;
+        height: 6px;
+      }
+
+      .dot.active {
+        width: 22px;
+      }
+
+      #swipe-hint {
+        display: none;
+      }
+
+      .swipe-wrap::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 440px;
+        height: 440px;
+        transform: translate(-50%, -50%);
+        background: radial-gradient(circle, rgba(201, 168, 76, .04) 0%, transparent 70%);
+        pointer-events: none;
+        border-radius: 50%;
+        z-index: 0;
+      }
+    }
   </style>
 </head>
 
@@ -1085,6 +1209,8 @@
 
   <!-- APP -->
   <div id="app">
+    <button class="desk-arrow" id="arr-left" onclick="goTo(curScreen-1)">&#8249;</button>
+    <button class="desk-arrow" id="arr-right" onclick="goTo(curScreen+1)">&#8250;</button>
     <div class="app-header">
       <div class="header-name" id="hdr-name">—</div>
       <div class="header-badge" id="hdr-day">—</div>
@@ -1173,67 +1299,100 @@
     let activeWttDay = 'Day 1';
     let jumpCalTarget = null; // day order to highlight after cal confirm
 
-    // ── SWIPE ──────────────────────────────────────────────────────────────────
+    // ── NAVIGATION ──────────────────────────────────────────────────────────────
     const track = document.getElementById('track');
-    let touchX = 0, touchY = 0, isDragging = false, dragDelta = 0;
     const wrap = document.getElementById('swipe-wrap');
+    let touchX = 0, touchY = 0, isDragging = false, dragDelta = 0;
+    const IS_DESKTOP = () => window.innerWidth >= 768;
+    const CARD_W = 420, CARD_GAP = 20;
 
+    // Mobile touch swipe
     wrap.addEventListener('touchstart', e => {
-      touchX = e.touches[0].clientX;
-      touchY = e.touches[0].clientY;
-      isDragging = true;
-      dragDelta = 0;
+      if (IS_DESKTOP()) return;
+      touchX = e.touches[0].clientX; touchY = e.touches[0].clientY;
+      isDragging = true; dragDelta = 0;
       track.style.transition = 'none';
     }, { passive: true });
-
     wrap.addEventListener('touchmove', e => {
-      if (!isDragging) return;
+      if (!isDragging || IS_DESKTOP()) return;
       const dx = e.touches[0].clientX - touchX;
       const dy = e.touches[0].clientY - touchY;
       if (Math.abs(dy) > Math.abs(dx) + 10) { isDragging = false; return; }
       dragDelta = dx;
-      const base = -curScreen * 100;
-      const pct = (base + (dx / wrap.clientWidth) * 100);
-      track.style.transform = `translateX(${pct}%)`;
+      track.style.transform = `translateX(${-curScreen * 100 + (dx / wrap.clientWidth) * 100}%)`;
     }, { passive: true });
-
     wrap.addEventListener('touchend', () => {
-      if (!isDragging) return;
-      isDragging = false;
-      track.style.transition = '';
-      const threshold = wrap.clientWidth * 0.22;
-      if (dragDelta < -threshold) goTo((curScreen + 1) % SCREENS);
-      else if (dragDelta > threshold) goTo((curScreen - 1 + SCREENS) % SCREENS);
+      if (!isDragging || IS_DESKTOP()) return;
+      isDragging = false; track.style.transition = '';
+      const thr = wrap.clientWidth * 0.22;
+      if (dragDelta < -thr && curScreen < SCREENS - 1) goTo(curScreen + 1);
+      else if (dragDelta > thr && curScreen > 0) goTo(curScreen - 1);
       else goTo(curScreen);
     });
 
+    // Desktop: mouse wheel
+    let wheelCD = false;
+    wrap.addEventListener('wheel', e => {
+      if (!IS_DESKTOP()) return;
+      e.preventDefault();
+      if (wheelCD) return;
+      wheelCD = true; setTimeout(() => wheelCD = false, 500);
+      const d = e.deltaX || e.deltaY;
+      if (d > 25 && curScreen < SCREENS - 1) goTo(curScreen + 1);
+      else if (d < -25 && curScreen > 0) goTo(curScreen - 1);
+    }, { passive: false });
+
+    // Keyboard
+    document.addEventListener('keydown', e => {
+      if (!document.getElementById('login-screen').classList.contains('hidden')) return;
+      if (e.key === 'ArrowRight') { e.preventDefault(); goTo(curScreen + 1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(curScreen - 1); }
+    });
+
+    // Click adjacent card on desktop
+    document.querySelectorAll('.screen').forEach((s, i) => {
+      s.addEventListener('click', () => { if (IS_DESKTOP() && i !== curScreen) goTo(i); });
+    });
+
+    function applyTransform(instant) {
+      const els = [...document.querySelectorAll('.screen')];
+      if (!IS_DESKTOP()) {
+        track.style.transition = instant ? 'none' : '';
+        track.style.transform = `translateX(${-curScreen * 100}%)`;
+        track.style.gap = '';
+        els.forEach(s => s.className = s.className.replace(/(desk-active|desk-near|desk-far)/g, '').trim());
+        return;
+      }
+      const viewW = wrap.clientWidth;
+      const offset = (viewW / 2) - (CARD_W / 2) - curScreen * (CARD_W + CARD_GAP);
+      track.style.transition = instant ? 'none' : 'transform .45s cubic-bezier(.4,0,.2,1)';
+      track.style.transform = `translateX(${offset}px)`;
+      track.style.gap = CARD_GAP + 'px';
+      els.forEach((s, i) => {
+        s.classList.remove('desk-active', 'desk-near', 'desk-far');
+        const d = Math.abs(i - curScreen);
+        if (d === 0) s.classList.add('desk-active');
+        else if (d === 1) s.classList.add('desk-near');
+        else s.classList.add('desk-far');
+      });
+    }
+    window.addEventListener('resize', () => applyTransform());
+
     function goTo(idx, instant) {
       const prev = curScreen;
-      curScreen = ((idx % SCREENS) + SCREENS) % SCREENS;
-      if (instant) { track.style.transition = 'none'; }
-      track.style.transform = `translateX(${-curScreen * 100}%)`;
+      curScreen = Math.max(0, Math.min(SCREENS - 1, idx));
+      applyTransform(instant);
       updateDots();
       if (curScreen !== prev) triggerEnterAnim(curScreen);
       hideSHint();
-
-      // If going to weekly TT and jumpCalTarget set
-      if (curScreen === 4 && jumpCalTarget) {
-        setWttDay(jumpCalTarget);
-        jumpCalTarget = null;
-      }
-      // Exit cal mode if navigating away
-      if (curScreen !== 3 && calMode) {
-        calMode = null; calSelected.clear();
-        renderCalConfirm();
-        updateCalModeLabel();
-      }
+      if (curScreen === 4 && jumpCalTarget) { setWttDay(jumpCalTarget); jumpCalTarget = null; }
+      if (curScreen !== 3 && calMode) { calMode = null; calSelected.clear(); renderCalConfirm(); updateCalModeLabel(); }
     }
 
     function triggerEnterAnim(idx) {
-      const screens = document.querySelectorAll('.screen');
-      const s = screens[idx];
-      s.classList.remove('entering');
-      void s.offsetWidth;
+      const s = document.querySelectorAll('.screen')[idx];
+      if (!s) return;
+      s.classList.remove('entering'); void s.offsetWidth;
       s.classList.add('entering');
       setTimeout(() => s.classList.remove('entering'), 600);
     }
@@ -1306,6 +1465,7 @@
         hdrDay.className = 'header-badge' + (data.DayOrder ? ' has-day' : '');
 
         buildDots();
+        setTimeout(() => applyTransform(), 50);
         renderToday();
         renderAttendance();
         renderMarks();
@@ -1372,9 +1532,14 @@
         });
       }
 
+      // Find the actual first class start time
+      const firstClassStart = items.length > 0 ? Math.min(...items.map(i => i.startM)) : CUTOFF_START;
+      // If day starts late (gap > 60min from 8:00), collapse early period
+      const effectiveStart = (firstClassStart - CUTOFF_START > 60 && items.length > 0) ? firstClassStart : CUTOFF_START;
+
       // Fill free slots between classes
       let full = [];
-      let prev = CUTOFF_START;
+      let prev = effectiveStart;
       items.sort((a, b) => a.startM - b.startM);
       items.forEach(item => {
         if (item.startM > prev + 5) {
@@ -1504,12 +1669,12 @@
         const div = document.createElement('div');
         div.className = 'att-item' + (a.isLow ? ' is-low' : '');
         const pct = Math.round(a.pct);
-        const circ = 2 * Math.PI * 15; // r=15
+        const circ = 2 * Math.PI * 15;
         const offset = circ - (pct / 100) * circ;
         const strokeColor = a.isLow ? 'var(--danger)' : pct >= 85 ? 'var(--ok)' : 'var(--warn)';
         div.innerHTML = `
       <div class="att-pct-ring">
-        <svg viewBox="0 0 36 36" width="42" height="42">
+        <svg viewBox="0 0 36 36" width="32" height="32">
           <circle class="ring-bg" cx="18" cy="18" r="15"/>
           <circle class="ring-fill" cx="18" cy="18" r="15"
             stroke="${strokeColor}"
@@ -1592,19 +1757,28 @@
     }
 
     // ── MARKS ──────────────────────────────────────────────────────────────────
+    function numVal(v) {
+      if (v === null || v === undefined) return null;
+      if (typeof v === 'number') return v;
+      if (typeof v === 'object' && v.parsedValue !== undefined) return v.parsedValue;
+      const n = parseFloat(v);
+      return isNaN(n) ? null : n;
+    }
+
     function renderMarks() {
       if (!appData) return;
       const list = document.getElementById('marks-list');
       list.innerHTML = '';
       appData.Marks.forEach(m => {
-        const valid = m.Components.filter(c => c.scored !== null && c.max !== null);
-        const totalScored = valid.reduce((s, c) => s + c.scored, 0);
-        const totalMax = valid.reduce((s, c) => s + c.max, 0);
+        const valid = m.Components.filter(c => numVal(c.scored) !== null && numVal(c.max) !== null);
+        const totalScored = valid.reduce((s, c) => s + numVal(c.scored), 0);
+        const totalMax = valid.reduce((s, c) => s + numVal(c.max), 0);
         const div = document.createElement('div');
         div.className = 'marks-item';
         const chips = valid.map(c => {
-          const isLow = c.max > 0 && (c.scored / c.max) < 0.5;
-          return `<div class="comp-chip${isLow ? ' low' : ''}">${c.name}: ${c.scored}/${c.max}</div>`;
+          const sc = numVal(c.scored), mx = numVal(c.max);
+          const isLow = mx > 0 && (sc / mx) < 0.5;
+          return `<div class="comp-chip${isLow ? ' low' : ''}">${c.name}: ${sc}/${mx}</div>`;
         }).join('');
         div.innerHTML = `
       <div class="marks-header">
@@ -1628,6 +1802,15 @@
 
     function renderCalendar() {
       if (!appData) return;
+      // Auto-set calViewMonth to first month with calendar data on first render
+      if (!renderCalendar._init) {
+        renderCalendar._init = true;
+        const dates = Object.keys(appData.Calendar).sort();
+        if (dates.length) {
+          const [y, m] = dates[0].split('-').map(Number);
+          calViewMonth = new Date(y, m - 1, 1);
+        }
+      }
       const y = calViewMonth.getFullYear(), mo = calViewMonth.getMonth();
       document.getElementById('cal-month-label').textContent = `${MONTHS[mo]} ${y}`;
 
@@ -1763,23 +1946,25 @@
     (async () => {
       buildDots();
       if (appToken) {
-        showLoading('LOADING');
-        // Quick auth check
+        // Hide login, show reconnecting message
+        document.getElementById('login-screen').classList.add('hidden');
+        showLoading('RECONNECTING');
         try {
           const p = await fetch(`${API}/profile`, { headers: { 'X-Session-Token': appToken } });
           const pj = await p.json();
           if (pj.ok) {
-            document.getElementById('login-screen').classList.add('hidden');
             await loadData();
             return;
           }
         } catch (e) { }
         hideLoading();
+        // Token expired — show login with message
+        document.getElementById('login-screen').classList.remove('hidden');
+        document.getElementById('login-err').textContent = 'Session expired. Please sign in again.';
+      } else {
+        document.getElementById('login-screen').classList.remove('hidden');
+        document.getElementById('loading').classList.add('hidden');
       }
-      // Show login
-      document.getElementById('login-screen').classList.remove('hidden');
-      document.getElementById('loading').classList.add('hidden');
-
       setTimeout(() => document.getElementById('swipe-hint').classList.add('gone'), 4000);
     })();
   </script>
