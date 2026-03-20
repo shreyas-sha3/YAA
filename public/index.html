@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Academia Client</title>
+        <style>
+            body {
+                font-family: monospace;
+                background: #121212;
+                color: #00ff00;
+                padding: 20px;
+            }
+            input,
+            button {
+                padding: 10px;
+                margin: 5px 0;
+                background: #222;
+                border: 1px solid #444;
+                color: #00ff00;
+                font-family: monospace;
+            }
+            button {
+                cursor: pointer;
+                background: #005500;
+            }
+            button:hover {
+                background: #007700;
+            }
+            #output {
+                white-space: pre-wrap;
+                margin-top: 20px;
+                border-top: 1px solid #444;
+                padding-top: 20px;
+            }
+            .error {
+                color: #ff5555;
+            }
+            .loading {
+                color: #ffff00;
+            }
+        </style>
+    </head>
+    <body>
+        <h2>SRM Academia Client</h2>
+        <div id="loginForm">
+            <input
+                type="email"
+                id="email"
+                placeholder="ID@srmist.edu.in"
+                style="width: 250px"
+            /><br />
+            <input type="password" id="password" placeholder="Password" /><br />
+            <button onclick="fetchData()">Get My Data</button>
+        </div>
+
+        <div id="output">System ready. Enter credentials to fetch data...</div>
+
+        <script>
+            async function fetchData() {
+                const email = document.getElementById("email").value;
+                const password = document.getElementById("password").value;
+                const out = document.getElementById("output");
+
+                if (!email || !password) {
+                    out.innerHTML =
+                        '<span class="error">Please enter email and password.</span>';
+                    return;
+                }
+
+                out.innerHTML =
+                    '<span class="loading">[*] Authenticating and scraping data (this takes a few seconds)...</span>';
+
+                try {
+                    const response = await fetch("/api/timetable", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            email: email,
+                            password: password,
+                        }),
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(
+                            result.detail || "Server error occurred",
+                        );
+                    }
+
+                    let display = `Welcome, ${result.profile.Name} (${result.profile.RegNo})\n\n`;
+                    display += `--- TODAY: ${result.data.DayOrder || "Holiday"} | BATCH ${result.data.Batch} ---\n`;
+
+                    if (result.data.Attendance.length > 0) {
+                        display += `\n--- ATTENDANCE ---\n`;
+                        result.data.Attendance.forEach((item) => {
+                            display += `${item.Attn}% | ${item.Title}\n`;
+                        });
+                    }
+
+                    out.innerHTML = display;
+                    console.log("Raw JSON Data available here:", result);
+                } catch (error) {
+                    out.innerHTML = `<span class="error">❌ ERROR: ${error.message}</span>`;
+                }
+            }
+        </script>
+    </body>
+</html>
