@@ -259,6 +259,7 @@ def get_data():
         active_indices = []
         today_do = None
         calendar_map = {}
+        soup_tt = None
         
         if not partial:
             soup_tt = get_html(s, f"{PORTAL}page/My_Time_Table_2025_26_EVEN") or \
@@ -345,7 +346,8 @@ def get_data():
                 for r in trows[1:]:
                     c = r.find_all('td', recursive=False)
                     if "Attn %" in hdr and len(c) >= 9:
-                        code = c[0].get_text(" ", strip=True)
+                        code_full = c[0].get_text(" ", strip=True)
+                        code = code_full.split(" ")[0] if " " in code_full else code_full
                         title = c[1].get_text(strip=True)
                         
                         # Save the real title to our dictionary
