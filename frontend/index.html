@@ -182,6 +182,29 @@
       transform: translateY(-50%);
     }
 
+    .github-link {
+      color: var(--text3);
+      transition: all 0.2s;
+      opacity: 0.5;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      text-decoration: none;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.05em;
+    }
+
+    .github-link:hover {
+      color: var(--gold);
+      opacity: 1;
+      transform: translateY(-1px);
+    }
+
+    .github-link svg {
+      fill: currentColor;
+    }
+
     /* ── APP SHELL ── */
     #app {
       position: fixed;
@@ -1186,6 +1209,13 @@
       <button class="login-btn" onclick="doLogin()">SIGN IN</button>
       <div class="login-error" id="login-err"></div>
     </form>
+    <a href="https://github.com/shreyas-sha3/YAA" target="_blank" class="github-link" style="margin-top: 1rem;">
+      <svg width="16" height="16" viewBox="0 0 24 24">
+        <path
+          d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+      </svg>
+      <span>VIEW ON GITHUB</span>
+    </a>
   </div>
 
   <!-- LOADING -->
@@ -1762,7 +1792,11 @@
       const list = document.getElementById('att-list');
       const processed = calcAttendance(appData.Attendance);
       list.innerHTML = '';
-      processed.forEach(a => {
+
+      const theory = processed.filter(a => typeof a.Category !== 'string' || !a.Category.toLowerCase().includes('practical'));
+      const practical = processed.filter(a => typeof a.Category === 'string' && a.Category.toLowerCase().includes('practical'));
+
+      const renderItem = (a) => {
         const div = document.createElement('div');
         div.className = 'att-item' + (a.isLow ? ' is-low' : '');
         const pct = Math.round(a.pct);
@@ -1781,12 +1815,24 @@
         <div class="att-pct-text" style="color:${strokeColor}">${pct}%</div>
       </div>
       <div class="att-info">
-        <div class="att-title">${a.Title} ${a.Code && a.Code.endsWith('P') ? '<span class="lab-pill" style="margin-left:4px;vertical-align:middle;">LAB</span>' : (a.Code ? '<span class="lab-pill" style="margin-left:4px;vertical-align:middle;color:var(--text3);border-color:var(--border2);background:transparent;">THEORY</span>' : '')}</div>
+        <div class="att-title">${a.Title}</div>
         <div class="att-margin ${a.isLow ? 'low' : 'ok'}">${a.marginText}</div>
       </div>
     `;
         list.appendChild(div);
-      });
+      };
+
+      theory.forEach(renderItem);
+
+      if (practical.length > 0) {
+        if (theory.length > 0) {
+          const sep = document.createElement('div');
+          sep.style.cssText = "text-align:center;font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--text3);margin:0.5rem 0;";
+          sep.textContent = 'LABS & PRACTICALS';
+          list.appendChild(sep);
+        }
+        practical.forEach(renderItem);
+      }
     }
 
     // OD / Bunk flow
@@ -2115,9 +2161,17 @@
       buildDots();
       updateODButtons();
       if (appToken) {
-        // Hide login, show reconnecting message
+        const cached = localStorage.getItem('yaa_data');
+        const cachedUser = localStorage.getItem('yaa_user');
+        if (cached && cachedUser) {
+          document.getElementById('login-screen').classList.add('hidden');
+          hideLoading();
+          loadData();
+          return;
+        }
+
         document.getElementById('login-screen').classList.add('hidden');
-        showLoading('RECONNECTING');
+        showLoading('CONNECTING');
         try {
           const p = await fetch(`${API}/profile`, { headers: { 'X-Session-Token': appToken } });
           const pj = await p.json();
@@ -2127,7 +2181,6 @@
           }
         } catch (e) { }
         hideLoading();
-        // Token expired — show login with message
         document.getElementById('login-screen').classList.remove('hidden');
         document.getElementById('login-err').textContent = 'Session expired. Please sign in again.';
       } else {

@@ -349,12 +349,14 @@ def get_data():
                         code_full = c[0].get_text(" ", strip=True)
                         code = code_full.split(" ")[0] if " " in code_full else code_full
                         title = c[1].get_text(strip=True)
+                        category = c[2].get_text(strip=True)
                         
                         # Save the real title to our dictionary
                         course_titles[code] = title
                         
-                        if code not in seen_att:
-                            seen_att.add(code)
+                        key = f"{code}_{category}"
+                        if key not in seen_att:
+                            seen_att.add(key)
                             
                             conducted_str = c[6].get_text(strip=True) if len(c) > 6 else "0"
                             absent_str = c[7].get_text(strip=True) if len(c) > 7 else "0"
@@ -371,6 +373,7 @@ def get_data():
                             att.append({
                                 "Code": code,
                                 "Title": title,
+                                "Category": category,
                                 "Conducted": conducted_str,
                                 "Attended": attended_str,
                                 "Attn": attn_pct
@@ -405,13 +408,8 @@ def get_data():
                                             break
                                 if not actual_title:
                                     actual_title = code
-                                
-                                if category and category.lower() in ["theory", "practical", "lab"]:
-                                    final_title = f"{actual_title} ({category})"
-                                else:
-                                    final_title = actual_title
                                     
-                                mks.append({"Title": final_title, "Components": components})
+                                mks.append({"Title": actual_title, "Components": components})
 
         if not partial:
             # Academic planner / calendar
