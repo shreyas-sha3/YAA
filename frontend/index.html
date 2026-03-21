@@ -6,7 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>YAA</title>
+  <meta name="description"
+    content="Yet Another lightweight, fast frontend to the SRM Academia portal. Check attendance, marks, and timetable instantly.">
+  <meta name="google-site-verification" content="7kVceu51llBvRIIBbcBAoBZHnrxEWBf-pJzJ_xL8q7I" />
+  <title>YetAnotherAcademia</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -567,45 +570,62 @@
       color: var(--danger);
     }
 
-    .od-btn {
+    .od-btn,
+    .cal-nav-btn,
+    .wtt-tab {
       flex: 1;
-      padding: .75rem .5rem;
+      padding: .75rem .2rem;
       border-radius: var(--r);
       font-family: 'Syne', sans-serif;
       font-size: .8rem;
-      font-weight: 700;
+      font-weight: 600;
       letter-spacing: .02em;
       border: 1px solid var(--border2);
       background: linear-gradient(180deg, var(--surface2) 0%, var(--surface) 100%);
       color: var(--text2);
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       text-align: center;
-      transition: all .2s;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 4px 12px rgba(0, 0, 0, 0.1);
+      white-space: nowrap;
     }
 
-    .od-btn:active {
+    .od-btn:active,
+    .cal-nav-btn:active,
+    .wtt-tab:active {
       transform: scale(.96);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .od-btn.active-od {
       border-color: #2ecc71;
       color: #2ecc71;
       background: rgba(46, 204, 113, 0.1);
-      box-shadow: 0 0 16px rgba(46, 204, 113, 0.15);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 0 16px rgba(46, 204, 113, 0.15);
     }
 
     .od-btn.active-bunk {
       border-color: #e74c3c;
       color: #e74c3c;
       background: rgba(231, 76, 60, 0.1);
-      box-shadow: 0 0 16px rgba(231, 76, 60, 0.15);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 0 16px rgba(231, 76, 60, 0.15);
     }
 
     .od-btn.reset {
       border-color: var(--border);
       color: var(--text3);
       background: var(--surface);
+    }
+
+    .wtt-tab.active {
+      background: var(--gold);
+      color: #000;
+      border-color: var(--gold);
+      transform: scale(1.03);
+      box-shadow: 0 4px 16px rgba(201, 168, 76, 0.2);
     }
 
     .od-controls {
@@ -697,26 +717,6 @@
     .cal-nav {
       display: flex;
       gap: .4rem;
-    }
-
-    .cal-nav-btn {
-      border-radius: var(--r);
-      border: 1px solid var(--border2);
-      background: linear-gradient(180deg, var(--surface2) 0%, var(--surface) 100%);
-      color: var(--text);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Syne', sans-serif;
-      font-weight: 600;
-      font-size: .85rem;
-      transition: all .2s;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .cal-nav-btn:active {
-      transform: scale(.95);
     }
 
     .cal-grid {
@@ -868,33 +868,7 @@
       display: none;
     }
 
-    .wtt-tab {
-      flex: 1;
-      text-align: center;
-      padding: .6rem .2rem;
-      border-radius: var(--r2);
-      font-family: 'Syne', sans-serif;
-      font-size: .8rem;
-      font-weight: 600;
-      border: 1px solid var(--border2);
-      background: var(--surface2);
-      color: var(--text2);
-      cursor: pointer;
-      transition: all .2s;
-      white-space: nowrap;
-    }
 
-    .wtt-tab.active {
-      background: var(--gold);
-      color: #000;
-      border-color: var(--gold);
-      transform: scale(1.05);
-      box-shadow: 0 4px 16px rgba(201, 168, 76, 0.2);
-    }
-
-    .wtt-tab:active {
-      transform: scale(.95);
-    }
 
     /* ── LOADING OVERLAY ── */
     #loading {
@@ -1113,8 +1087,11 @@
         --card-w: 420px;
         min-width: var(--card-w);
         max-width: var(--card-w);
+        height: 85vh;
+        max-height: 850px;
+        margin: auto 0;
         padding: .75rem 1.25rem 1rem;
-        border-radius: 18px;
+        border-radius: 24px;
         border: 1px solid var(--border);
         background: var(--surface);
         flex-shrink: 0;
@@ -1123,6 +1100,7 @@
         filter: blur(2px);
         pointer-events: none;
         transition: opacity .4s, transform .4s, filter .4s;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
       }
 
       .screen.desk-active {
@@ -1526,6 +1504,7 @@
           populateUIFromData();
           document.getElementById('app').classList.add('visible');
           document.getElementById('login-screen').classList.add('hidden');
+          hideLoading();
           syncDataInBackground();
         } catch (e) { }
       }
@@ -1811,10 +1790,16 @@
     }
 
     // OD / Bunk flow
+    function updateODButtons() {
+      const odEl = document.getElementById('od-btn');
+      const bnEl = document.getElementById('bunk-btn');
+      if (calMode === 'od' || odDays.length > 0) odEl.classList.add('active-od'); else odEl.classList.remove('active-od');
+      if (calMode === 'bunk' || bunkDays.length > 0) bnEl.classList.add('active-bunk'); else bnEl.classList.remove('active-bunk');
+    }
+
     function activateOD() {
       calMode = 'od'; calSelected = new Set(odDays);
-      document.getElementById('od-btn').classList.add('active-od');
-      document.getElementById('bunk-btn').classList.remove('active-bunk');
+      updateODButtons();
       goTo(3);
       renderCalendar();
       renderCalConfirm();
@@ -1822,8 +1807,7 @@
     }
     function activateBunk() {
       calMode = 'bunk'; calSelected = new Set(bunkDays);
-      document.getElementById('bunk-btn').classList.add('active-bunk');
-      document.getElementById('od-btn').classList.remove('active-od');
+      updateODButtons();
       goTo(3);
       renderCalendar();
       renderCalConfirm();
@@ -1833,13 +1817,11 @@
       odDays = []; bunkDays = [];
       calMode = null; calSelected.clear();
       localStorage.removeItem('od_days'); localStorage.removeItem('bunk_days');
-      document.getElementById('od-btn').classList.remove('active-od');
-      document.getElementById('bunk-btn').classList.remove('active-bunk');
+      updateODButtons();
       renderAttendance();
       renderCalendar();
       renderCalConfirm();
       updateCalModeLabel();
-      showToast('Modifiers reset');
     }
     function applyCalSelection() {
       if (calMode === 'od') {
@@ -1858,8 +1840,7 @@
     }
     function cancelCalSelection() {
       calMode = null; calSelected.clear();
-      document.getElementById('od-btn').classList.remove('active-od');
-      document.getElementById('bunk-btn').classList.remove('active-bunk');
+      updateODButtons();
       renderCalConfirm();
       updateCalModeLabel();
       goTo(1);
@@ -2132,6 +2113,7 @@
     // ── BOOT ──────────────────────────────────────────────────────────────────
     (async () => {
       buildDots();
+      updateODButtons();
       if (appToken) {
         // Hide login, show reconnecting message
         document.getElementById('login-screen').classList.add('hidden');
