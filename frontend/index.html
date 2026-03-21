@@ -1215,6 +1215,10 @@
         z-index: 0;
       }
     }
+
+    .instant-snap .screen {
+      transition: none !important;
+    }
   </style>
 </head>
 
@@ -1408,14 +1412,41 @@
       if (e.key === 'ArrowLeft') { e.preventDefault(); doNav(domIndex - 1); }
     });
     getRealScreens().forEach((s, i) => {
-      s.addEventListener('click', () => { if (IS_DESKTOP() && i !== curScreen) doNav(i + 1); });
+      s.addEventListener('click', (e) => {
+        if (e.target.closest('.od-btn, .cal-day, .cal-nav-btn, .confirm-btn, .wtt-tab, a, button')) return;
+        if (IS_DESKTOP() && i !== curScreen) doNav(i + 1);
+      });
     });
+    let snapTimer = null;
+
     function doNav(targetDomIdx) {
+      if (snapTimer) {
+        clearTimeout(snapTimer);
+        snapTimer = null;
+      }
+
+      if (targetDomIdx > SCREENS + 1) {
+        goToCore(1, true);
+        targetDomIdx = 2;
+      } else if (targetDomIdx < 0) {
+        goToCore(SCREENS, true);
+        targetDomIdx = SCREENS - 1;
+      }
+
       goToCore(targetDomIdx, false);
+
+      const snapDelay = IS_DESKTOP() ? 460 : 360;
+
       if (targetDomIdx === 0) {
-        setTimeout(() => goToCore(SCREENS, true), 350);
+        snapTimer = setTimeout(() => {
+          goToCore(SCREENS, true);
+          snapTimer = null;
+        }, snapDelay);
       } else if (targetDomIdx === SCREENS + 1) {
-        setTimeout(() => goToCore(1, true), 350);
+        snapTimer = setTimeout(() => {
+          goToCore(1, true);
+          snapTimer = null;
+        }, snapDelay);
       }
     }
     function goTo(idx) {
@@ -1424,25 +1455,34 @@
 
     function applyTransform(instant) {
       const els = [...track.children];
+
+      if (instant) track.classList.add('instant-snap');
+
       if (!IS_DESKTOP()) {
         track.style.transition = instant ? 'none' : 'transform .35s ease';
         track.style.transform = `translateX(${-domIndex * 100}vw)`;
         track.style.gap = '';
         els.forEach(s => s.className = s.className.replace(/(desk-active|desk-near|desk-far)/g, '').trim());
-        return;
+      } else {
+        const viewW = wrap.clientWidth;
+        const offset = (viewW / 2) - (CARD_W / 2) - domIndex * (CARD_W + CARD_GAP);
+        track.style.transition = instant ? 'none' : 'transform .45s cubic-bezier(.4,0,.2,1)';
+        track.style.transform = `translateX(${offset}px)`;
+        track.style.gap = CARD_GAP + 'px';
+
+        els.forEach((s, idx) => {
+          s.classList.remove('desk-active', 'desk-near', 'desk-far');
+          const d = Math.abs(idx - domIndex);
+          if (d === 0) s.classList.add('desk-active');
+          else if (d === 1 || (idx === SCREENS + 1 && domIndex === 1) || (idx === 0 && domIndex === SCREENS)) s.classList.add('desk-near');
+          else s.classList.add('desk-far');
+        });
       }
-      const viewW = wrap.clientWidth;
-      const offset = (viewW / 2) - (CARD_W / 2) - domIndex * (CARD_W + CARD_GAP);
-      track.style.transition = instant ? 'none' : 'transform .45s cubic-bezier(.4,0,.2,1)';
-      track.style.transform = `translateX(${offset}px)`;
-      track.style.gap = CARD_GAP + 'px';
-      els.forEach((s, idx) => {
-        s.classList.remove('desk-active', 'desk-near', 'desk-far');
-        const d = Math.abs(idx - domIndex);
-        if (d === 0) s.classList.add('desk-active');
-        else if (d === 1 || (idx === SCREENS + 1 && domIndex === 1) || (idx === 0 && domIndex === SCREENS)) s.classList.add('desk-near');
-        else s.classList.add('desk-far');
-      });
+
+      if (instant) {
+        void track.offsetWidth;
+        track.classList.remove('instant-snap');
+      }
     }
     window.addEventListener('resize', () => applyTransform(true));
 
@@ -1772,17 +1812,13 @@
       return raw.map(a => {
         let conducted = parseInt(a.Conducted) || 0;
         let attended = parseInt(a.Attended) || 0;
+        const isPractical = typeof a.Category === 'string' && a.Category.toLowerCase().includes('practical');
+        const aTitleClean = a.Title.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-        const aCat = typeof a.Category === 'string' ? a.Category.toLowerCase() : '';
-        const isPractical = aCat.includes('practical') || aCat.includes('lab');
-
-        const aTitle = a.Title.toLowerCase();
-        const aCode = (a.Code || '').toLowerCase();
-        // Strip trailing T, P, J, L safely (e.g., 18CSE301J -> 18cse301)
-        const baseCode = aCode.replace(/[tjpl]+$/i, '');
+        const processedDays = new Set();
 
         const processDay = (dateStr, type) => {
-          const do_ = appData.Calendar[dateStr];
+          const do_ = appData.Calendar ? appData.Calendar[dateStr] : null;
           if (!do_ || !appData.Schedule[do_]) return;
 
           const isFuture = dateStr > todayStr;
@@ -1791,55 +1827,45 @@
             const slot = appData.Schedule[do_][i];
             if (!slot || !slot.title) return;
 
-            const sTitle = slot.title.toLowerCase();
+            const sTitleClean = slot.title.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-            let isMatch = false;
-            if (baseCode && baseCode.length > 3 && sTitle.includes(baseCode)) {
-              isMatch = true;
-            } else if (sTitle.includes(aTitle) || aTitle.includes(sTitle)) {
-              isMatch = true;
-            } else {
-              // Fallback: Check if first 2 significant words match
-              const words = aTitle.split(' ').filter(w => w.length > 2);
-              if (words.length >= 2 && sTitle.includes(words[0]) && sTitle.includes(words[1])) {
-                isMatch = true;
-              } else if (words.length === 1 && sTitle.includes(words[0])) {
-                isMatch = true;
-              }
-            }
-            if (!isMatch) return;
-
-            // Strict Lab vs Theory isolation (safeguard against missing backend flags)
-            const slotIsLab = !!slot.isLab || sTitle.includes('lab') || sTitle.includes('practical');
-            if (isPractical !== slotIsLab) return;
-
-            // Date-aware Math 
-            if (type === 'od') {
-              if (isFuture) {
-                conducted += 1;
-                attended += 1;
-              } else {
-                // Past OD means "I was absent, but fix it to present"
-                if (attended < conducted) attended += 1;
-              }
-            } else if (type === 'bunk') {
-              if (isFuture) {
-                // Future bunk means "Class happens, but I won't go"
-                conducted += 1;
-              } else {
-                // Past bunk means "I was marked present, simulate if I was absent"
-                if (attended > 0) attended -= 1;
+            if ((sTitleClean.includes(aTitleClean) || aTitleClean.includes(sTitleClean)) && (!!slot.isLab === isPractical)) {
+              if (type === 'od' || type === 'attend') {
+                if (isFuture) conducted++;
+                if (isFuture || attended < conducted) attended++;
+              } else if (type === 'bunk') {
+                if (isFuture) conducted++;
+                else if (attended > 0) attended--;
               }
             }
           });
         };
 
-        if (odDays.length > 0 && appData.Calendar) {
-          odDays.forEach(dateStr => processDay(dateStr, 'od'));
+        // 1. Process Bunk Range (Assume attendance until the latest bunk date)
+        if (bunkDays.length > 0) {
+          const maxBunk = bunkDays.reduce((a, b) => a > b ? a : b);
+          const allDates = Object.keys(appData.Calendar || {}).sort();
+          const range = allDates.filter(d => d >= todayStr && d <= maxBunk);
+          range.forEach(d => {
+            processDay(d, bunkDays.includes(d) ? 'bunk' : 'attend');
+            processedDays.add(d);
+          });
         }
-        if (bunkDays.length > 0 && appData.Calendar) {
-          bunkDays.forEach(dateStr => processDay(dateStr, 'bunk'));
-        }
+
+        // 2. Process OD Days (not already in prediction range)
+        odDays.forEach(d => {
+          if (!processedDays.has(d)) {
+            processDay(d, 'od');
+            processedDays.add(d);
+          }
+        });
+
+        // 3. Process remaining Bunk Days (mostly for safety)
+        bunkDays.forEach(d => {
+          if (!processedDays.has(d)) {
+            processDay(d, 'bunk');
+          }
+        });
 
         const pct = conducted > 0 ? (attended / conducted) * 100 : 0;
         const isLow = pct < 75;
@@ -1978,7 +2004,7 @@
     function updateCalModeLabel() {
       const lbl = document.getElementById('cal-mode-label');
       if (calMode === 'od') lbl.innerHTML = 'Select your <span>OD days</span>';
-      else if (calMode === 'bunk') lbl.innerHTML = 'Select days to <span style="color:var(--danger)">bunk</span>';
+      else if (calMode === 'bunk') lbl.innerHTML = 'Select days to <span style="color:var(--danger)">bunk</span><div style="font-size:0.58rem;opacity:0.6;margin-top:2px;">Assumes you attend all classes till then.</div>';
       else lbl.innerHTML = 'Tap a working day to view timetable';
     }
     function numVal(v) {
