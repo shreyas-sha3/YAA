@@ -10,6 +10,8 @@
     content="Yet Another lightweight, fast frontend to the SRM Academia portal. Check attendance, marks, and timetable instantly.">
   <meta name="google-site-verification" content="7kVceu51llBvRIIBbcBAoBZHnrxEWBf-pJzJ_xL8q7I" />
   <title>YetAnotherAcademia</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%23000000%22/><text x=%2250%%22 y=%2255%%22 dominant-baseline=%22central%22 text-anchor=%22middle%22 font-family=%22Syne, sans-serif%22 font-weight=%22800%22 font-size=%2270%22 fill=%22%23c9a84c%22>Y</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -199,6 +201,17 @@
       color: var(--gold);
       opacity: 1;
       transform: translateY(-1px);
+    }
+
+    .github-link-header {
+      color: var(--text3);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+    }
+
+    .github-link-header:hover {
+      color: var(--gold);
     }
 
     .github-link svg {
@@ -596,8 +609,10 @@
     .od-btn,
     .cal-nav-btn,
     .wtt-tab {
-      flex: 1;
-      padding: .75rem .2rem;
+      flex: 0 0 auto;
+      min-width: 68px;
+      height: 44px;
+      padding: 0 .4rem;
       border-radius: var(--r);
       font-family: 'Syne', sans-serif;
       font-size: .8rem;
@@ -1232,7 +1247,15 @@
     <div class="app-header">
       <div class="header-name" id="hdr-name" onclick="promptLogout()" style="cursor:pointer;" title="Click to logout">—
       </div>
-      <div class="header-badge" id="hdr-day">—</div>
+      <div style="display:flex; align-items:center; gap:0.6rem;">
+        <a href="https://github.com/shreyas-sha3/YAA" target="_blank" class="github-link-header" title="View Source">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+          </svg>
+        </a>
+        <div class="header-badge" id="hdr-day">—</div>
+      </div>
     </div>
 
     <div class="dot-nav" id="dot-nav"></div>
@@ -1400,8 +1423,10 @@
 
     // Outer navigation function handling the infinite wrap logic
     function doNav(targetDomIdx) {
+      // Mobile & Desktop infinite wrap
       goToCore(targetDomIdx, false);
 
+      // If we stepped onto a clone, silently jump to the core copy after transition
       if (targetDomIdx === 0) {
         setTimeout(() => goToCore(SCREENS, true), 350);
       } else if (targetDomIdx === SCREENS + 1) {
@@ -1452,6 +1477,7 @@
       updateDots();
       if (curScreen !== prev && !instant) triggerEnterAnim(domIndex);
       hideSHint();
+      syncClones();
 
       if (curScreen === 4 && jumpCalTarget) { setWttDay(jumpCalTarget); jumpCalTarget = null; }
       if (curScreen !== 3 && calMode) { calMode = null; calSelected.clear(); renderCalConfirm(); updateCalModeLabel(); }
@@ -1574,9 +1600,33 @@
     }
 
     function populateUIFromData() {
+      const today = new Date();
+      const y = today.getFullYear(), m = String(today.getMonth() + 1).padStart(2, '0'), d = String(today.getDate()).padStart(2, '0');
+      const todayStr = `${y}-${m}-${d}`;
+      let isHoliday = false;
+      let dayKey = appData.Calendar ? appData.Calendar[todayStr] : appData.DayOrder;
+
+      if (!dayKey && appData.Calendar) {
+        isHoliday = true;
+        let dates = Object.keys(appData.Calendar).sort();
+        let nextDate = dates.find(dt => dt > todayStr);
+        if (nextDate) {
+          dayKey = appData.Calendar[nextDate];
+        }
+      }
+
+      appData.effectiveDayKey = dayKey;
+      appData.isHolidayToday = isHoliday;
+
       const hdrDay = document.getElementById('hdr-day');
-      hdrDay.textContent = appData.DayOrder || 'Holiday';
-      hdrDay.className = 'header-badge' + (appData.DayOrder ? ' has-day' : '');
+      if (isHoliday) {
+        hdrDay.textContent = dayKey ? `Next: ${dayKey}` : 'Holiday';
+        hdrDay.className = 'header-badge';
+      } else {
+        hdrDay.textContent = dayKey || 'Holiday';
+        hdrDay.className = 'header-badge' + (dayKey ? ' has-day' : '');
+      }
+
       const name = localStorage.getItem('yaa_user');
       if (name) document.getElementById('hdr-name').textContent = name;
 
@@ -1597,9 +1647,14 @@
         const r = await fetch(`${API}/data?sync=true`, { headers: { 'X-Session-Token': appToken } });
         const d = await r.json();
         if (d.ok) {
-          appData.Attendance = d.Attendance;
-          appData.Marks = d.Marks;
-          localStorage.setItem('yaa_data', JSON.stringify(appData));
+          if ((!d.Attendance || d.Attendance.length === 0) && (!d.Marks || d.Marks.length === 0) && appData.Attendance && appData.Attendance.length > 0) {
+            appData.syncFailed = true;
+          } else {
+            appData.Attendance = d.Attendance;
+            appData.Marks = d.Marks;
+            appData.syncFailed = false;
+            localStorage.setItem('yaa_data', JSON.stringify(appData));
+          }
           renderAttendance();
           renderMarks();
         }
@@ -1616,72 +1671,85 @@
     // ── TODAY'S TIMETABLE ─────────────────────────────────────────────────────
     function parseEndTime(ts) {
       const m = ts.match(/\d{1,2}:\d{2}\s*-\s*(\d{1,2}):(\d{2})/);
-      return m ? { h: +m[1], min: +m[2] } : null;
+      if (!m) return null;
+      let h = +m[1];
+      if (h < 8) h += 12; // 1pm to 7pm map to 13-19
+      return { h, min: +m[2] };
     }
     function parseStartTime(ts) {
       const m = ts.match(/(\d{1,2}):(\d{2})\s*-/);
-      return m ? { h: +m[1], min: +m[2] } : null;
+      if (!m) return null;
+      let h = +m[1];
+      if (h < 8) h += 12;
+      return { h, min: +m[2] };
     }
     function timeToMins(t) { return t ? t.h * 60 + t.min : 0; }
 
     function renderToday() {
       if (!appData) return;
       const d = appData;
-      const dayKey = d.DayOrder;
+      const dayKey = d.effectiveDayKey;
+      const isHoliday = d.isHolidayToday;
       const list = document.getElementById('tt-list');
       const title = document.getElementById('s1-title');
 
-      title.textContent = dayKey ? `${dayKey}` : 'Holiday';
+      title.textContent = isHoliday ? (dayKey ? `Holiday (Next: ${dayKey})` : 'Holiday') : (dayKey ? `${dayKey}` : 'Holiday');
 
       const now = new Date();
-      const nowMins = now.getHours() * 60 + now.getMinutes();
+      const nowMins = isHoliday ? -1 : (now.getHours() * 60 + now.getMinutes());
 
       // Build slots 8:00 - dynamic end
       const CUTOFF_START = 8 * 60;
-      let maxClassEnd = 16 * 60 + 50;
+      let maxClassEnd = 0;
 
       let items = [];
       if (dayKey && d.Schedule[dayKey]) {
-        d.ActiveCols.forEach(i => {
+        for (let i = 1; i < d.Schedule[dayKey].length; i++) {
           const slot = d.Schedule[dayKey][i];
-          if (!slot || !slot.title) return; // skip empty slots
+          if (!slot || !slot.title || !slot.time) continue; // skip empty slots
           const end = parseEndTime(slot.time);
           const start = parseStartTime(slot.time);
-          if (!end || !start) return;
+          if (!end || !start) continue;
           const endM = timeToMins(end);
           const startM = timeToMins(start);
-          if (startM < CUTOFF_START) return;
+          if (startM < CUTOFF_START) continue;
           if (endM > maxClassEnd) maxClassEnd = endM;
           items.push({ ...slot, startM, endM });
-        });
+        }
       }
 
-      const CUTOFF_END_DYN = maxClassEnd;
+      const CUTOFF_END_DYN = maxClassEnd > 0 ? maxClassEnd : (16 * 60 + 50);
 
-      // Find the actual first class start time
-      const firstClassStart = items.length > 0 ? Math.min(...items.map(i => i.startM)) : CUTOFF_START;
-      // If day starts late (gap > 60min from 8:00), collapse early period
-      const effectiveStart = (firstClassStart - CUTOFF_START > 60 && items.length > 0) ? firstClassStart : CUTOFF_START;
-
-      // Fill free slots between classes
-      let full = [];
-      let prev = effectiveStart;
+      // Sort by start time
       items.sort((a, b) => a.startM - b.startM);
-      items.forEach(item => {
-        if (item.startM > prev + 5) {
-          full.push({
-            free: true, startM: prev, endM: item.startM,
-            time: `${minsToTimeStr(prev)} - ${minsToTimeStr(item.startM)}`
-          });
+
+      // Merge contiguous identical classes
+      let merged = [];
+      for (const it of items) {
+        if (merged.length === 0) { merged.push(it); continue; }
+        const last = merged[merged.length - 1];
+        const gap = it.startM - last.endM;
+        if (last.title === it.title && last.room === it.room && gap >= 0 && gap <= 15) {
+          last.endM = it.endM;
+          last.time = `${last.time.split('-')[0].trim()} - ${it.time.split('-')[1].trim()}`;
+        } else {
+          merged.push(it);
         }
-        full.push(item);
-        prev = item.endM;
-      });
-      if (prev < CUTOFF_END_DYN - 5) {
-        full.push({
-          free: true, startM: prev, endM: CUTOFF_END_DYN,
-          time: `${minsToTimeStr(prev)} - ${minsToTimeStr(CUTOFF_END_DYN)}`
-        });
+      }
+
+      // Fill blanks (ignoring trivial gaps < 15 mins)
+      let full = [];
+      let cur = CUTOFF_START;
+
+      for (const m of merged) {
+        if (m.startM - cur >= 15) {
+          full.push({ free: true, startM: cur, endM: m.startM, time: `${minsToTimeStr(cur)} - ${minsToTimeStr(m.startM)}` });
+        }
+        full.push(m);
+        cur = m.endM;
+      }
+      if (CUTOFF_END_DYN - cur >= 15) {
+        full.push({ free: true, startM: cur, endM: CUTOFF_END_DYN, time: `${minsToTimeStr(cur)} - ${minsToTimeStr(CUTOFF_END_DYN)}` });
       }
 
       if (full.length === 0) {
@@ -1708,16 +1776,16 @@
         }
 
         div.innerHTML = `
-      <div class="tt-time">${formatTimeSlot(item.time)}</div>
-      <div class="tt-dot"></div>
-      <div class="tt-info">
-        <div class="tt-title">${item.free ? '— free —' : (item.title || '—')}</div>
-        ${!item.free && item.room ? `<div class="tt-room">${item.room}</div>` : ''}
-      </div>
-      ${item.isLab && !item.free ? '<div class="lab-pill">LAB</div>' : ''}
-      ${isNow ? '<div class="now-indicator">NOW</div>' : ''}
-      ${progressHtml}
-    `;
+        <div class="tt-time">${formatTimeSlot(item.time)}</div>
+        <div class="tt-dot"></div>
+        <div class="tt-info">
+          <div class="tt-title">${item.free ? '— free —' : (item.title || '—')}</div>
+          ${!item.free && item.room ? `<div class="tt-room">${item.room}</div>` : ''}
+        </div>
+        ${item.isLab && !item.free ? '<div class="lab-pill">LAB</div>' : ''}
+        ${isNow ? '<div class="now-indicator">NOW</div>' : ''}
+        ${progressHtml}
+      `;
         list.appendChild(div);
       });
       syncClones();
@@ -1793,6 +1861,14 @@
       const processed = calcAttendance(appData.Attendance);
       list.innerHTML = '';
 
+      if (appData.syncFailed) {
+        const warn = document.createElement('div');
+        warn.style.cssText = "text-align:center;font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--warn);margin-bottom:0.5rem;padding:0.5rem;border:1px solid var(--warn-dim);background:var(--surface2);border-radius:var(--r2);cursor:pointer;";
+        warn.innerHTML = "Session expired. Tap here to login and fetch latest details.";
+        warn.onclick = () => { localStorage.clear(); location.reload(); };
+        list.appendChild(warn);
+      }
+
       const theory = processed.filter(a => typeof a.Category !== 'string' || !a.Category.toLowerCase().includes('practical'));
       const practical = processed.filter(a => typeof a.Category === 'string' && a.Category.toLowerCase().includes('practical'));
 
@@ -1828,7 +1904,7 @@
         if (theory.length > 0) {
           const sep = document.createElement('div');
           sep.style.cssText = "text-align:center;font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--text3);margin:0.5rem 0;";
-          sep.textContent = 'LABS & PRACTICALS';
+          sep.textContent = 'LABS';
           list.appendChild(sep);
         }
         practical.forEach(renderItem);
@@ -1926,6 +2002,15 @@
       if (!appData) return;
       const list = document.getElementById('marks-list');
       list.innerHTML = '';
+
+      if (appData.syncFailed) {
+        const warn = document.createElement('div');
+        warn.style.cssText = "text-align:center;font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--warn);margin-bottom:0.5rem;padding:0.5rem;border:1px solid var(--warn-dim);background:var(--surface2);border-radius:var(--r2);cursor:pointer;";
+        warn.innerHTML = "Session expired. Tap here to login and fetch latest details.";
+        warn.onclick = () => { localStorage.clear(); location.reload(); };
+        list.appendChild(warn);
+      }
+
       const attMap = buildCourseTitleMap();
       appData.Marks.forEach(m => {
         // Try to resolve a prettier title from attendance map
