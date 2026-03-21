@@ -251,10 +251,18 @@ def get_data():
     s = make_http_session(token)
 
     try:
+        partial = request.args.get('sync') == 'true'
+        
         # Timetable
-        soup_tt = get_html(s, f"{PORTAL}page/My_Time_Table_2025_26_EVEN") or \
-                  get_html(s, f"{PORTAL}page/My_Time_Table_2023_24")
         batch, my_slots = "2", {}
+        grid = {}
+        active_indices = []
+        today_do = None
+        calendar_map = {}
+        
+        if not partial:
+            soup_tt = get_html(s, f"{PORTAL}page/My_Time_Table_2025_26_EVEN") or \
+                      get_html(s, f"{PORTAL}page/My_Time_Table_2023_24")
 
         if soup_tt:
             lbl = soup_tt.find('td', string=re.compile(r'Batch:', re.I))
@@ -322,7 +330,7 @@ def get_data():
                     "slots": slot_str
                 })
         active_indices = [i for i, v in enumerate(has_class) if v]
-
+        
         soup_att = get_html(s, f"{PORTAL}page/My_Attendance")
         att, mks, seen_att, seen_mks = [], [], set(), set()
         
@@ -359,6 +367,7 @@ def get_data():
                                 attended_str = "0"
                                 
                             att.append({
+                                "Code": code,
                                 "Title": title,
                                 "Conducted": conducted_str,
                                 "Attended": attended_str,
@@ -402,10 +411,18 @@ def get_data():
                                     
                                 mks.append({"Title": final_title, "Components": components})
 
-        # Academic planner / calendar
-        today_do, calendar_map = get_academic_planner(s)
+        if not partial:
+            # Academic planner / calendar
+            today_do, calendar_map = get_academic_planner(s)
 
         save_http_session(token, s)
+
+        if partial:
+            return jsonify({
+                "ok": True,
+                "Attendance": att,
+                "Marks": mks,
+            })
 
         return jsonify({
             "ok": True,

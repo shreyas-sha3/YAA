@@ -567,48 +567,53 @@
       color: var(--danger);
     }
 
-    .od-controls {
-      display: flex;
-      gap: .5rem;
-      flex-shrink: 0;
-      padding-top: .25rem;
-    }
-
     .od-btn {
       flex: 1;
-      padding: .55rem .5rem;
-      border-radius: var(--r2);
-      font-family: 'DM Mono', monospace;
-      font-size: .65rem;
-      font-weight: 500;
-      letter-spacing: .04em;
+      padding: .75rem .5rem;
+      border-radius: var(--r);
+      font-family: 'Syne', sans-serif;
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .02em;
       border: 1px solid var(--border2);
-      background: var(--surface2);
+      background: linear-gradient(180deg, var(--surface2) 0%, var(--surface) 100%);
       color: var(--text2);
       cursor: pointer;
       text-align: center;
       transition: all .2s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     .od-btn:active {
-      transform: scale(.97);
+      transform: scale(.96);
     }
 
     .od-btn.active-od {
-      border-color: var(--gold2);
-      color: var(--gold);
-      background: var(--now-dim);
+      border-color: #2ecc71;
+      color: #2ecc71;
+      background: rgba(46, 204, 113, 0.1);
+      box-shadow: 0 0 16px rgba(46, 204, 113, 0.15);
     }
 
     .od-btn.active-bunk {
-      border-color: var(--danger);
-      color: var(--danger);
-      background: var(--danger-dim);
+      border-color: #e74c3c;
+      color: #e74c3c;
+      background: rgba(231, 76, 60, 0.1);
+      box-shadow: 0 0 16px rgba(231, 76, 60, 0.15);
     }
 
     .od-btn.reset {
       border-color: var(--border);
       color: var(--text3);
+      background: var(--surface);
+    }
+
+    .od-controls {
+      display: flex;
+      gap: .6rem;
+      flex-shrink: 0;
+      padding-top: .5rem;
+      padding-bottom: .5rem;
     }
 
     /* ── MARKS SCREEN ── */
@@ -695,22 +700,23 @@
     }
 
     .cal-nav-btn {
-      width: 30px;
-      height: 30px;
-      border-radius: var(--r2);
+      border-radius: var(--r);
       border: 1px solid var(--border2);
-      background: var(--surface2);
-      color: var(--text2);
+      background: linear-gradient(180deg, var(--surface2) 0%, var(--surface) 100%);
+      color: var(--text);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: .75rem;
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: .85rem;
       transition: all .2s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     .cal-nav-btn:active {
-      transform: scale(.93);
+      transform: scale(.95);
     }
 
     .cal-grid {
@@ -863,12 +869,13 @@
     }
 
     .wtt-tab {
-      flex-shrink: 0;
-      padding: .4rem .75rem;
-      border-radius: 20px;
-      font-family: 'DM Mono', monospace;
-      font-size: .65rem;
-      font-weight: 500;
+      flex: 1;
+      text-align: center;
+      padding: .6rem .2rem;
+      border-radius: var(--r2);
+      font-family: 'Syne', sans-serif;
+      font-size: .8rem;
+      font-weight: 600;
       border: 1px solid var(--border2);
       background: var(--surface2);
       color: var(--text2);
@@ -881,6 +888,8 @@
       background: var(--gold);
       color: #000;
       border-color: var(--gold);
+      transform: scale(1.05);
+      box-shadow: 0 4px 16px rgba(201, 168, 76, 0.2);
     }
 
     .wtt-tab:active {
@@ -1213,7 +1222,8 @@
     <button class="desk-arrow" id="arr-left" onclick="goTo(curScreen-1)">&#8249;</button>
     <button class="desk-arrow" id="arr-right" onclick="goTo(curScreen+1)">&#8250;</button>
     <div class="app-header">
-      <div class="header-name" id="hdr-name">—</div>
+      <div class="header-name" id="hdr-name" onclick="promptLogout()" style="cursor:pointer;" title="Click to logout">—
+      </div>
       <div class="header-badge" id="hdr-day">—</div>
     </div>
 
@@ -1232,13 +1242,13 @@
         <!-- S2: ATTENDANCE -->
         <div class="screen" id="s-att">
           <div class="screen-label">screen 02</div>
-          <div class="screen-title">Attendance</div>
+          <div class="screen-title" style="margin-bottom:0.5rem">Attendance</div>
+          <div class="inner-scroll" id="att-list"></div>
           <div class="od-controls">
             <div class="od-btn" id="od-btn" onclick="activateOD()">＋ OD Days</div>
             <div class="od-btn" id="bunk-btn" onclick="activateBunk()">− Bunk Days</div>
             <div class="od-btn reset" id="reset-btn" onclick="resetModifiers()" style="flex:.6;">Reset</div>
           </div>
-          <div class="inner-scroll" id="att-list"></div>
         </div>
 
         <!-- S3: MARKS -->
@@ -1253,13 +1263,14 @@
           <div class="screen-label">screen 04</div>
           <div class="cal-header">
             <div class="cal-month" id="cal-month-label">—</div>
-            <div class="cal-nav">
-              <div class="cal-nav-btn" onclick="shiftMonth(-1)">‹</div>
-              <div class="cal-nav-btn" onclick="shiftMonth(1)">›</div>
-            </div>
           </div>
           <div class="cal-mode-label" id="cal-mode-label">Tap a working day to view its timetable</div>
-          <div class="cal-grid" id="cal-grid"></div>
+          <div class="cal-grid" id="cal-grid" style="margin-bottom: auto;"></div>
+
+          <div class="cal-nav" style="justify-content:center;margin-top:0.5rem;margin-bottom:0.5rem;">
+            <div class="cal-nav-btn" onclick="shiftMonth(-1)" style="flex:1;height:42px;">‹ Prev</div>
+            <div class="cal-nav-btn" onclick="shiftMonth(1)" style="flex:1;height:42px;">Next ›</div>
+          </div>
           <div class="cal-confirm" id="cal-confirm" style="display:none;">
             <div class="confirm-btn cancel" onclick="cancelCalSelection()">Cancel</div>
             <div class="confirm-btn apply" onclick="applyCalSelection()">Confirm</div>
@@ -1269,11 +1280,12 @@
         <!-- S5: WEEKLY TT -->
         <div class="screen" id="s-weekly">
           <div class="screen-label">screen 05</div>
-          <div class="screen-title">Timetable</div>
-          <div class="wtt-tabs" id="wtt-tabs"></div>
+          <div class="screen-title" style="margin-bottom:0.5rem;">Timetable</div>
           <div class="tt-list" id="wtt-list"
             style="justify-content:flex-start;gap:.4rem;overflow-y:auto;flex:1;scrollbar-width:none;-webkit-overflow-scrolling:touch;">
           </div>
+          <div class="wtt-tabs" id="wtt-tabs"
+            style="margin-top:0.5rem;padding-bottom:1rem;justify-content:space-between"></div>
         </div>
 
       </div><!-- /track -->
@@ -1314,8 +1326,11 @@
     const cloneLast = origScreens[SCREENS - 1].cloneNode(true);
     cloneFirst.classList.add('clone');
     cloneLast.classList.add('clone');
-    track.appendChild(cloneFirst); // Index SCREENS (e.g. 5)
-    track.insertBefore(cloneLast, origScreens[0]); // Index -1 (visually), but flex is left-to-right.
+    // Strip IDs from clones so getElementById always finds the real screens
+    cloneFirst.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+    cloneLast.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+    track.appendChild(cloneFirst);
+    track.insertBefore(cloneLast, origScreens[0]);
     // Wait, simpler approach: we don't change flex order, so actual DOM children:
     // [0]: cloneLast (S5)
     // [1]: real S1 ... [5]: real S5
@@ -1377,19 +1392,8 @@
 
     // Outer navigation function handling the infinite wrap logic
     function doNav(targetDomIdx) {
-      if (IS_DESKTOP()) {
-        // Desert infinite wrap on desktop layout as it relies on transforms that conflict with cards
-        // Just clamp the desktop nav
-        let target = targetDomIdx - 1;
-        target = Math.max(0, Math.min(SCREENS - 1, target));
-        goToCore(target + 1, false);
-        return;
-      }
-
-      // Mobile infinite wrap
       goToCore(targetDomIdx, false);
 
-      // If we stepped onto a clone, silently jump to the core copy after transition
       if (targetDomIdx === 0) {
         setTimeout(() => goToCore(SCREENS, true), 350);
       } else if (targetDomIdx === SCREENS + 1) {
@@ -1443,6 +1447,20 @@
 
       if (curScreen === 4 && jumpCalTarget) { setWttDay(jumpCalTarget); jumpCalTarget = null; }
       if (curScreen !== 3 && calMode) { calMode = null; calSelected.clear(); renderCalConfirm(); updateCalModeLabel(); }
+    }
+
+    function syncClones() {
+      const trackEls = [...track.children];
+      const s1 = trackEls[1], s5 = trackEls[5];
+      const cLast = trackEls[0], cFirst = trackEls[6];
+      if (s1 && cFirst) {
+        cFirst.innerHTML = s1.innerHTML;
+        cFirst.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+      }
+      if (s5 && cLast) {
+        cLast.innerHTML = s5.innerHTML;
+        cLast.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+      }
     }
 
     function triggerEnterAnim(idx) {
@@ -1501,45 +1519,84 @@
 
     // ── LOAD DATA ─────────────────────────────────────────────────────────────
     async function loadData() {
-      showLoading('FETCHING DATA');
-      try {
-        const [prof, data] = await Promise.all([
-          fetch(`${API}/profile`, { headers: { 'X-Session-Token': appToken } }).then(r => r.json()),
-          fetch(`${API}/data`, { headers: { 'X-Session-Token': appToken } }).then(r => r.json())
-        ]);
-
-        if (!prof.ok || !data.ok) {
-          hideLoading();
-          if (!prof.ok) showLoginScreen();
-          return;
-        }
-
-        appData = data;
-        document.getElementById('hdr-name').textContent = prof.name.split(' ')[0] || prof.name;
-        const hdrDay = document.getElementById('hdr-day');
-        hdrDay.textContent = data.DayOrder || 'Holiday';
-        hdrDay.className = 'header-badge' + (data.DayOrder ? ' has-day' : '');
-
-        buildDots();
-        goToCore(domIndex, true); // Initialize track position
-        renderToday();
-        renderAttendance();
-        renderMarks();
-        renderCalendar();
-        renderWeeklyTabs();
-        renderWeeklyDay('Day 1');
-
-        hideLoading();
-        document.getElementById('app').classList.add('visible');
-        document.getElementById('login-screen').classList.add('hidden');
-
-        // Start live clock for today
-        setInterval(renderToday, 60000);
-
-      } catch (e) {
-        hideLoading();
-        showLoginScreen();
+      const cached = localStorage.getItem('yaa_data');
+      if (cached) {
+        try {
+          appData = JSON.parse(cached);
+          populateUIFromData();
+          document.getElementById('app').classList.add('visible');
+          document.getElementById('login-screen').classList.add('hidden');
+          syncDataInBackground();
+        } catch (e) { }
       }
+
+      if (!cached) {
+        showLoading('FETCHING DATA');
+        try {
+          const [prof, data] = await Promise.all([
+            fetch(`${API}/profile`, { headers: { 'X-Session-Token': appToken } }).then(r => r.json()),
+            fetch(`${API}/data`, { headers: { 'X-Session-Token': appToken } }).then(r => r.json())
+          ]);
+
+          if (!prof.ok || !data.ok) {
+            hideLoading();
+            if (!prof.ok) showLoginScreen();
+            return;
+          }
+
+          appData = data;
+          localStorage.setItem('yaa_data', JSON.stringify(appData));
+          document.getElementById('hdr-name').textContent = prof.name.split(' ')[0] || prof.name;
+          localStorage.setItem('yaa_user', document.getElementById('hdr-name').textContent);
+
+          populateUIFromData();
+
+          hideLoading();
+          document.getElementById('app').classList.add('visible');
+          document.getElementById('login-screen').classList.add('hidden');
+
+          setInterval(renderToday, 60000);
+
+        } catch (e) {
+          hideLoading();
+          showLoginScreen();
+        }
+      }
+    }
+
+    function populateUIFromData() {
+      const hdrDay = document.getElementById('hdr-day');
+      hdrDay.textContent = appData.DayOrder || 'Holiday';
+      hdrDay.className = 'header-badge' + (appData.DayOrder ? ' has-day' : '');
+      const name = localStorage.getItem('yaa_user');
+      if (name) document.getElementById('hdr-name').textContent = name;
+
+      buildDots();
+      goToCore(domIndex, true);
+      renderToday();
+      renderAttendance();
+      renderMarks();
+      renderCalendar();
+      renderWeeklyTabs();
+      renderWeeklyDay('Day 1');
+      syncClones();
+    }
+
+    async function syncDataInBackground() {
+      document.getElementById('hdr-name').innerHTML += ' <span style="font-size:0.5rem;color:var(--gold);animation:spin 1s linear infinite;display:inline-block;">↻</span>';
+      try {
+        const r = await fetch(`${API}/data?sync=true`, { headers: { 'X-Session-Token': appToken } });
+        const d = await r.json();
+        if (d.ok) {
+          appData.Attendance = d.Attendance;
+          appData.Marks = d.Marks;
+          localStorage.setItem('yaa_data', JSON.stringify(appData));
+          renderAttendance();
+          renderMarks();
+        }
+      } catch (e) { }
+      const name = localStorage.getItem('yaa_user');
+      if (name) document.getElementById('hdr-name').textContent = name;
     }
 
     function showLoginScreen() {
@@ -1570,23 +1627,27 @@
       const now = new Date();
       const nowMins = now.getHours() * 60 + now.getMinutes();
 
-      // Build slots 8:00 - 16:50
-      const CUTOFF_END = 16 * 60 + 50;
+      // Build slots 8:00 - dynamic end
       const CUTOFF_START = 8 * 60;
+      let maxClassEnd = 16 * 60 + 50;
 
       let items = [];
       if (dayKey && d.Schedule[dayKey]) {
         d.ActiveCols.forEach(i => {
           const slot = d.Schedule[dayKey][i];
+          if (!slot || !slot.title) return; // skip empty slots
           const end = parseEndTime(slot.time);
           const start = parseStartTime(slot.time);
           if (!end || !start) return;
           const endM = timeToMins(end);
           const startM = timeToMins(start);
-          if (endM > CUTOFF_END || startM < CUTOFF_START) return;
+          if (startM < CUTOFF_START) return;
+          if (endM > maxClassEnd) maxClassEnd = endM;
           items.push({ ...slot, startM, endM });
         });
       }
+
+      const CUTOFF_END_DYN = maxClassEnd;
 
       // Find the actual first class start time
       const firstClassStart = items.length > 0 ? Math.min(...items.map(i => i.startM)) : CUTOFF_START;
@@ -1607,15 +1668,15 @@
         full.push(item);
         prev = item.endM;
       });
-      if (prev < CUTOFF_END - 5) {
+      if (prev < CUTOFF_END_DYN - 5) {
         full.push({
-          free: true, startM: prev, endM: CUTOFF_END,
-          time: `${minsToTimeStr(prev)} - ${minsToTimeStr(CUTOFF_END)}`
+          free: true, startM: prev, endM: CUTOFF_END_DYN,
+          time: `${minsToTimeStr(prev)} - ${minsToTimeStr(CUTOFF_END_DYN)}`
         });
       }
 
       if (full.length === 0) {
-        full.push({ free: true, startM: CUTOFF_START, endM: CUTOFF_END, time: '8:00 - 16:50' });
+        full.push({ free: true, startM: CUTOFF_START, endM: CUTOFF_END_DYN, time: `8:00 - ${minsToTimeStr(CUTOFF_END_DYN)}` });
       }
 
       list.innerHTML = '';
@@ -1650,6 +1711,7 @@
     `;
         list.appendChild(div);
       });
+      syncClones();
     }
 
     function minsToTimeStr(m) {
@@ -1727,7 +1789,7 @@
         const pct = Math.round(a.pct);
         const circ = 2 * Math.PI * 15;
         const offset = circ - (pct / 100) * circ;
-        const strokeColor = a.isLow ? 'var(--danger)' : pct >= 85 ? 'var(--ok)' : 'var(--warn)';
+        const strokeColor = a.isLow ? 'var(--danger)' : pct >= 80 ? 'var(--ok)' : 'var(--warn)';
         div.innerHTML = `
       <div class="att-pct-ring">
         <svg viewBox="0 0 36 36" width="32" height="32">
@@ -1740,7 +1802,7 @@
         <div class="att-pct-text" style="color:${strokeColor}">${pct}%</div>
       </div>
       <div class="att-info">
-        <div class="att-title">${a.Title}</div>
+        <div class="att-title">${a.Title} ${a.Code && a.Code.endsWith('P') ? '<span class="lab-pill" style="margin-left:4px;vertical-align:middle;">LAB</span>' : (a.Code ? '<span class="lab-pill" style="margin-left:4px;vertical-align:middle;color:var(--text3);border-color:var(--border2);background:transparent;">THEORY</span>' : '')}</div>
         <div class="att-margin ${a.isLow ? 'low' : 'ok'}">${a.marginText}</div>
       </div>
     `;
@@ -1935,8 +1997,17 @@
 
         el.innerHTML = `<div class="d-num">${day}</div>${isWorking ? `<div class="d-order">${do_.replace('Day ', '')}</div>` : ''}`;
 
-        el.onclick = () => {
+        el.onclick = (e) => {
+          e.stopPropagation();
           if (calMode) {
+            if (calMode === 'bunk') {
+              const [yStr, mStr, dStr] = dateStr.split('-');
+              const chosenDate = new Date(Number(yStr), Number(mStr) - 1, Number(dStr));
+              if (chosenDate < new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
+                showToast("Bunk assumes future absence. Select future date.");
+                return;
+              }
+            }
             if (calSelected.has(dateStr)) calSelected.delete(dateStr);
             else if (isWorking) calSelected.add(dateStr);
             renderCalendar();
@@ -1969,6 +2040,7 @@
       activeWttDay = day;
       renderWeeklyTabs();
       renderWeeklyDay(day);
+      syncClones();
     }
 
     function renderWeeklyDay(day) {
@@ -2048,6 +2120,13 @@
     }
     function hideSHint() {
       document.getElementById('swipe-hint').classList.add('gone');
+    }
+
+    function promptLogout() {
+      if (confirm("Are you sure you want to logout?")) {
+        localStorage.clear();
+        location.reload();
+      }
     }
 
     // ── BOOT ──────────────────────────────────────────────────────────────────
