@@ -8,22 +8,11 @@ import secrets
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
 
-CORS(app, supports_credentials=False, origins="*",
+CORS(app, supports_credentials=False, 
+     origins=["https://yetanotheracademia.web.app", "http://localhost:5000", "http://127.0.0.1:5000", "http://localhost:5500", "http://127.0.0.1:5500"],
      allow_headers=["Content-Type", "X-Session-Token"],
      methods=["GET", "POST", "OPTIONS"])
 
-@app.after_request
-def cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, X-Session-Token"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    return response
-
-@app.route("/api/<path:path>", methods=["OPTIONS"])
-def options_handler(path):
-    return "", 204
-
-# ── Session store keyed by browser session token ──────────────────────────────
 _sessions = {}  # token -> {"cookies": list, "headers": dict}
 
 BASE = "https://academia.srmist.edu.in"
@@ -60,8 +49,6 @@ def get_token():
     if not t:
         t = secrets.token_hex(16)
     return t
-
-# ── Auth ────────────────────────────────────────────────────────────────────
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.json or {}
@@ -175,9 +162,6 @@ def profile():
         return jsonify({"ok": True, "name": name_field, "reg": ""})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
-
-
-# ── Helpers ─────────────────────────────────────────────────────────────────
 def get_html(s, url):
     s.headers.update({"X-Requested-With": "XMLHttpRequest"})
     txt = s.get(url).text
@@ -203,15 +187,11 @@ def get_academic_planner(s):
 
     now = datetime.datetime.now()
     is_even = "EVEN" in planner_link.upper()
-
-    # Determine semester month range and year mapping
     if is_even:
-        # Even semester: Jan(0)–Jun(5), columns in blocks of 5
         month_range = range(0, 6)  # block indices
         month_nums = [1, 2, 3, 4, 5, 6]  # actual month numbers
         year_base = now.year
     else:
-        # Odd semester: Jul(0)–Dec(5)
         month_range = range(0, 6)
         month_nums = [7, 8, 9, 10, 11, 12]
         year_base = now.year
@@ -242,9 +222,6 @@ def get_academic_planner(s):
                         pass
 
     return today_do, calendar_map
-
-
-# ── Main data endpoint ───────────────────────────────────────────────────────
 @app.route("/api/data", methods=["GET"])
 def get_data():
     token = get_token()
@@ -252,8 +229,6 @@ def get_data():
 
     try:
         partial = request.args.get('sync') == 'true'
-        
-        # Timetable
         batch, my_slots = "2", {}
         grid = {}
         active_indices = []
@@ -289,8 +264,6 @@ def get_data():
                                         "Room": chunk[rc].get_text(strip=True) if rc < len(chunk) else ""
                                     }
                     break
-
-        # Unified timetable matrix
         suffix = 'Batch_1' if batch == '1' else 'batch_2'
         soup_uni = get_html(s, f"{PORTAL}page/Unified_Time_Table_2025_{suffix}")
         rows = soup_uni.find_all('tr') if soup_uni else []
@@ -317,7 +290,6 @@ def get_data():
                         break
                 if match:
                     has_class[i] = True
-                # detect lab: slots starting with 'P'
                 is_lab = False
                 clean = slot_str.strip()
                 if clean.upper().startswith('P'):
@@ -350,8 +322,6 @@ def get_data():
                         code = code_full.split(" ")[0] if " " in code_full else code_full
                         title = c[1].get_text(strip=True)
                         category = c[2].get_text(strip=True)
-                        
-                        # Save the real title to our dictionary
                         course_titles[code] = title
                         
                         key = f"{code}_{category}"
@@ -361,8 +331,6 @@ def get_data():
                             conducted_str = c[6].get_text(strip=True) if len(c) > 6 else "0"
                             absent_str = c[7].get_text(strip=True) if len(c) > 7 else "0"
                             attn_pct = c[8].get_text(strip=True) if len(c) > 8 else "0"
-                            
-                            # FIX: Calculate Attended = Conducted - Absent
                             try:
                                 conducted = int(conducted_str)
                                 absent = int(absent_str)
@@ -396,11 +364,8 @@ def get_data():
                                     components.append({"name": raw, "max": None, "scored": None})
                             if components:
                                 category = c[1].get_text(strip=True) if len(c) > 1 else ""
-                                
-                                # Look up real title: try exact match, then try base code (strip trailing letter)
                                 actual_title = course_titles.get(code)
                                 if not actual_title:
-                                    # Try stripping trailing T/P/J/L suffix (e.g. 21CSE281T -> 21CSE281)
                                     base_code = re.sub(r'[TPJL]$', '', code)
                                     for k, v in course_titles.items():
                                         if k.startswith(base_code) or base_code in k:
@@ -412,7 +377,6 @@ def get_data():
                                 mks.append({"Title": actual_title, "Components": components})
 
         if not partial:
-            # Academic planner / calendar
             today_do, calendar_map = get_academic_planner(s)
 
         save_http_session(token, s)

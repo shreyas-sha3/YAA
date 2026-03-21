@@ -411,9 +411,13 @@
     }
 
     .tt-item.is-free {
-      opacity: .35;
       border-color: transparent;
       background: transparent;
+    }
+
+    .tt-item.is-free .tt-title,
+    .tt-item.is-free .tt-time {
+      color: var(--text3);
     }
 
     .tt-time {
@@ -631,6 +635,17 @@
       white-space: nowrap;
     }
 
+    .od-btn {
+      flex: 1;
+    }
+
+    .wtt-tab {
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      transform: translateZ(0);
+      will-change: transform;
+    }
+
     .od-btn:active,
     .cal-nav-btn:active,
     .wtt-tab:active {
@@ -829,8 +844,8 @@
     }
 
     .cal-day.selected-od {
-      border-color: var(--gold2);
-      background: var(--now-dim);
+      border-color: #2ecc71;
+      background: rgba(46, 204, 113, 0.12);
     }
 
     .cal-day.selected-bunk {
@@ -1327,11 +1342,8 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    // ── CONFIG ─────────────────────────────────────────────────────────────────
     const API = 'https://yaa-k29h.onrender.com/api';
     const SCREENS = 5;
-
-    // ── STATE ──────────────────────────────────────────────────────────────────
     let appToken = localStorage.getItem('academia_token') || '';
     let appData = null;
     let curScreen = 0;
@@ -1342,38 +1354,22 @@
     let calViewMonth = new Date();
     let activeWttDay = 'Day 1';
     let jumpCalTarget = null; // day order to highlight after cal confirm
-
-    // ── NAVIGATION ──────────────────────────────────────────────────────────────
     const track = document.getElementById('track');
     const wrap = document.getElementById('swipe-wrap');
     let touchX = 0, touchY = 0, isDragging = false, dragDelta = 0;
     const IS_DESKTOP = () => window.innerWidth >= 768;
     const CARD_W = 420, CARD_GAP = 20;
-
-    // INFINITE SWIPE SETUP
-    // Clone first and last screens for seamless wrapping
     const origScreens = [...track.children];
     const cloneFirst = origScreens[0].cloneNode(true);
     const cloneLast = origScreens[SCREENS - 1].cloneNode(true);
     cloneFirst.classList.add('clone');
     cloneLast.classList.add('clone');
-    // Strip IDs from clones so getElementById always finds the real screens
     cloneFirst.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
     cloneLast.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
     track.appendChild(cloneFirst);
     track.insertBefore(cloneLast, origScreens[0]);
-    // Wait, simpler approach: we don't change flex order, so actual DOM children:
-    // [0]: cloneLast (S5)
-    // [1]: real S1 ... [5]: real S5
-    // [6]: cloneFirst (S1)
-
-    // We adjust let curScreen to be 1-based internally for the DOM, but keep business logic 0-based.
     let domIndex = 1; // 1 to SCREENS
-
-    // Real screen elements for click/UI updates
     const getRealScreens = () => [...track.children].slice(1, SCREENS + 1);
-
-    // Mobile touch swipe
     wrap.addEventListener('touchstart', e => {
       if (IS_DESKTOP()) return;
       touchX = e.touches[0].clientX; touchY = e.touches[0].clientY;
@@ -1396,8 +1392,6 @@
       else if (dragDelta > thr) doNav(domIndex - 1);
       else doNav(domIndex);
     });
-
-    // Desktop: mouse wheel
     let wheelCD = false;
     wrap.addEventListener('wheel', e => {
       if (!IS_DESKTOP()) return;
@@ -1408,33 +1402,22 @@
       if (d > 25) doNav(domIndex + 1);
       else if (d < -25) doNav(domIndex - 1);
     }, { passive: false });
-
-    // Keyboard
     document.addEventListener('keydown', e => {
       if (!document.getElementById('login-screen').classList.contains('hidden')) return;
       if (e.key === 'ArrowRight') { e.preventDefault(); doNav(domIndex + 1); }
       if (e.key === 'ArrowLeft') { e.preventDefault(); doNav(domIndex - 1); }
     });
-
-    // Click adjacent card on desktop
     getRealScreens().forEach((s, i) => {
       s.addEventListener('click', () => { if (IS_DESKTOP() && i !== curScreen) doNav(i + 1); });
     });
-
-    // Outer navigation function handling the infinite wrap logic
     function doNav(targetDomIdx) {
-      // Mobile & Desktop infinite wrap
       goToCore(targetDomIdx, false);
-
-      // If we stepped onto a clone, silently jump to the core copy after transition
       if (targetDomIdx === 0) {
         setTimeout(() => goToCore(SCREENS, true), 350);
       } else if (targetDomIdx === SCREENS + 1) {
         setTimeout(() => goToCore(1, true), 350);
       }
     }
-
-    // Direct interface for edge UI (like arrows)
     function goTo(idx) {
       doNav(idx + 1);
     }
@@ -1448,7 +1431,6 @@
         els.forEach(s => s.className = s.className.replace(/(desk-active|desk-near|desk-far)/g, '').trim());
         return;
       }
-      // Desktop logic
       const viewW = wrap.clientWidth;
       const offset = (viewW / 2) - (CARD_W / 2) - domIndex * (CARD_W + CARD_GAP);
       track.style.transition = instant ? 'none' : 'transform .45s cubic-bezier(.4,0,.2,1)';
@@ -1457,7 +1439,6 @@
       els.forEach((s, idx) => {
         s.classList.remove('desk-active', 'desk-near', 'desk-far');
         const d = Math.abs(idx - domIndex);
-        // Special case for clones to be active if we are wrapped to them
         if (d === 0) s.classList.add('desk-active');
         else if (d === 1 || (idx === SCREENS + 1 && domIndex === 1) || (idx === 0 && domIndex === SCREENS)) s.classList.add('desk-near');
         else s.classList.add('desk-far');
@@ -1468,7 +1449,6 @@
     function goToCore(idx, instant) {
       const prev = curScreen;
       domIndex = idx;
-      // calc logic screen mapping (0-4) where 0=S1, 4=S5
       if (domIndex === 0) curScreen = SCREENS - 1;
       else if (domIndex === SCREENS + 1) curScreen = 0;
       else curScreen = domIndex - 1;
@@ -1504,8 +1484,6 @@
       s.classList.add('entering');
       setTimeout(() => s.classList.remove('entering'), 600);
     }
-
-    // ── DOTS ───────────────────────────────────────────────────────────────────
     function buildDots() {
       const nav = document.getElementById('dot-nav');
       nav.innerHTML = '';
@@ -1521,8 +1499,6 @@
         d.className = 'dot' + (i === curScreen ? ' active' : '');
       });
     }
-
-    // ── LOGIN ──────────────────────────────────────────────────────────────────
     async function doLogin() {
       const id = document.getElementById('inp-id').value.trim();
       const pw = document.getElementById('inp-pw').value;
@@ -1550,8 +1526,6 @@
         err.textContent = 'Connection error.';
       }
     }
-
-    // ── LOAD DATA ─────────────────────────────────────────────────────────────
     async function loadData() {
       const cached = localStorage.getItem('yaa_data');
       if (cached) {
@@ -1667,8 +1641,6 @@
       document.getElementById('login-screen').classList.remove('hidden');
       document.getElementById('app').classList.remove('visible');
     }
-
-    // ── TODAY'S TIMETABLE ─────────────────────────────────────────────────────
     function parseEndTime(ts) {
       const m = ts.match(/\d{1,2}:\d{2}\s*-\s*(\d{1,2}):(\d{2})/);
       if (!m) return null;
@@ -1697,8 +1669,6 @@
 
       const now = new Date();
       const nowMins = isHoliday ? -1 : (now.getHours() * 60 + now.getMinutes());
-
-      // Build slots 8:00 - dynamic end
       const CUTOFF_START = 8 * 60;
       let maxClassEnd = 0;
 
@@ -1719,11 +1689,7 @@
       }
 
       const CUTOFF_END_DYN = maxClassEnd > 0 ? maxClassEnd : (16 * 60 + 50);
-
-      // Sort by start time
       items.sort((a, b) => a.startM - b.startM);
-
-      // Merge contiguous identical classes
       let merged = [];
       for (const it of items) {
         if (merged.length === 0) { merged.push(it); continue; }
@@ -1736,8 +1702,6 @@
           merged.push(it);
         }
       }
-
-      // Fill blanks (ignoring trivial gaps < 15 mins)
       let full = [];
       let cur = CUTOFF_START;
 
@@ -1748,12 +1712,13 @@
         full.push(m);
         cur = m.endM;
       }
-      if (CUTOFF_END_DYN - cur >= 15) {
-        full.push({ free: true, startM: cur, endM: CUTOFF_END_DYN, time: `${minsToTimeStr(cur)} - ${minsToTimeStr(CUTOFF_END_DYN)}` });
+      const DAY_END = 16 * 60 + 50;
+      if (DAY_END - cur >= 15) {
+        full.push({ free: true, startM: cur, endM: DAY_END, time: `${minsToTimeStr(cur)} - 16:50` });
       }
 
       if (full.length === 0) {
-        full.push({ free: true, startM: CUTOFF_START, endM: CUTOFF_END_DYN, time: `8:00 - ${minsToTimeStr(CUTOFF_END_DYN)}` });
+        full.push({ free: true, startM: CUTOFF_START, endM: DAY_END, time: `8:00 - 16:50` });
       }
 
       list.innerHTML = '';
@@ -1779,7 +1744,7 @@
         <div class="tt-time">${formatTimeSlot(item.time)}</div>
         <div class="tt-dot"></div>
         <div class="tt-info">
-          <div class="tt-title">${item.free ? '— free —' : (item.title || '—')}</div>
+          <div class="tt-title">${item.free ? 'No classes' : (item.title || '—')}</div>
           ${!item.free && item.room ? `<div class="tt-room">${item.room}</div>` : ''}
         </div>
         ${item.isLab && !item.free ? '<div class="lab-pill">LAB</div>' : ''}
@@ -1796,45 +1761,84 @@
       return `${h}:${String(min).padStart(2, '0')}`;
     }
     function formatTimeSlot(ts) {
-      // Shorten: "8:00 AM - 8:50 AM" -> "8:00\n8:50"
       return ts.replace(/\s*(AM|PM)\s*/gi, '').trim().replace(' - ', '\n');
     }
-
-    // ── ATTENDANCE ─────────────────────────────────────────────────────────────
     function calcAttendance(raw) {
       if (!appData) return [];
+
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
       return raw.map(a => {
         let conducted = parseInt(a.Conducted) || 0;
         let attended = parseInt(a.Attended) || 0;
 
-        // Apply OD (mark as attended)
-        if (odDays.length > 0 && appData.Calendar) {
-          odDays.forEach(dateStr => {
-            const do_ = appData.Calendar[dateStr];
-            if (!do_ || !appData.Schedule[do_]) return;
-            appData.ActiveCols.forEach(i => {
-              const slot = appData.Schedule[do_][i];
-              if (slot && slot.title && slot.title.toLowerCase().includes(a.Title.toLowerCase().split(' ')[0].toLowerCase())) {
-                attended += 1;
-                conducted += 1;
-              }
-            });
-          });
-        }
+        const aCat = typeof a.Category === 'string' ? a.Category.toLowerCase() : '';
+        const isPractical = aCat.includes('practical') || aCat.includes('lab');
 
-        // Apply bunk (mark as absent)
-        if (bunkDays.length > 0 && appData.Calendar) {
-          bunkDays.forEach(dateStr => {
-            const do_ = appData.Calendar[dateStr];
-            if (!do_ || !appData.Schedule[do_]) return;
-            appData.ActiveCols.forEach(i => {
-              const slot = appData.Schedule[do_][i];
-              if (slot && slot.title && slot.title.toLowerCase().includes(a.Title.toLowerCase().split(' ')[0].toLowerCase())) {
-                conducted += 1;
-                // not adding to attended = absent
+        const aTitle = a.Title.toLowerCase();
+        const aCode = (a.Code || '').toLowerCase();
+        // Strip trailing T, P, J, L safely (e.g., 18CSE301J -> 18cse301)
+        const baseCode = aCode.replace(/[tjpl]+$/i, '');
+
+        const processDay = (dateStr, type) => {
+          const do_ = appData.Calendar[dateStr];
+          if (!do_ || !appData.Schedule[do_]) return;
+
+          const isFuture = dateStr > todayStr;
+
+          appData.ActiveCols.forEach(i => {
+            const slot = appData.Schedule[do_][i];
+            if (!slot || !slot.title) return;
+
+            const sTitle = slot.title.toLowerCase();
+
+            let isMatch = false;
+            if (baseCode && baseCode.length > 3 && sTitle.includes(baseCode)) {
+              isMatch = true;
+            } else if (sTitle.includes(aTitle) || aTitle.includes(sTitle)) {
+              isMatch = true;
+            } else {
+              // Fallback: Check if first 2 significant words match
+              const words = aTitle.split(' ').filter(w => w.length > 2);
+              if (words.length >= 2 && sTitle.includes(words[0]) && sTitle.includes(words[1])) {
+                isMatch = true;
+              } else if (words.length === 1 && sTitle.includes(words[0])) {
+                isMatch = true;
               }
-            });
+            }
+            if (!isMatch) return;
+
+            // Strict Lab vs Theory isolation (safeguard against missing backend flags)
+            const slotIsLab = !!slot.isLab || sTitle.includes('lab') || sTitle.includes('practical');
+            if (isPractical !== slotIsLab) return;
+
+            // Date-aware Math 
+            if (type === 'od') {
+              if (isFuture) {
+                conducted += 1;
+                attended += 1;
+              } else {
+                // Past OD means "I was absent, but fix it to present"
+                if (attended < conducted) attended += 1;
+              }
+            } else if (type === 'bunk') {
+              if (isFuture) {
+                // Future bunk means "Class happens, but I won't go"
+                conducted += 1;
+              } else {
+                // Past bunk means "I was marked present, simulate if I was absent"
+                if (attended > 0) attended -= 1;
+              }
+            }
           });
+        };
+
+        if (odDays.length > 0 && appData.Calendar) {
+          odDays.forEach(dateStr => processDay(dateStr, 'od'));
+        }
+        if (bunkDays.length > 0 && appData.Calendar) {
+          bunkDays.forEach(dateStr => processDay(dateStr, 'bunk'));
         }
 
         const pct = conducted > 0 ? (attended / conducted) * 100 : 0;
@@ -1842,11 +1846,9 @@
 
         let marginText = '';
         if (isLow) {
-          // classes needed: (0.75*C - A) / 0.25 = 3A - 3C... solve: 3*(needed+A) >= (conducted+needed), => needed >= (0.75C - A)/0.25
           const needed = Math.ceil((0.75 * conducted - attended) / 0.25);
           marginText = `Required ${needed} class${needed !== 1 ? 'es' : ''}`;
         } else {
-          // can bunk: A - 0.75*(C+bunk) >= 0 => bunk <= (A - 0.75C)/0.75
           const canBunk = Math.floor((attended - 0.75 * conducted) / 0.75);
           marginText = `Margin ${Math.max(0, canBunk)} class${canBunk !== 1 ? 'es' : ''}`;
         }
@@ -1891,7 +1893,10 @@
         <div class="att-pct-text" style="color:${strokeColor}">${pct}%</div>
       </div>
       <div class="att-info">
-        <div class="att-title">${a.Title}</div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+          <div class="att-title">${a.Title}</div>
+          <div style="font-family:'DM Mono',monospace; font-size:.65rem; color:var(--text2); white-space:nowrap; margin-top:2px;">${a.effAttended}/${a.effConducted}</div>
+        </div>
         <div class="att-margin ${a.isLow ? 'low' : 'ok'}">${a.marginText}</div>
       </div>
     `;
@@ -1910,8 +1915,6 @@
         practical.forEach(renderItem);
       }
     }
-
-    // OD / Bunk flow
     function updateODButtons() {
       const odEl = document.getElementById('od-btn');
       const bnEl = document.getElementById('bunk-btn');
@@ -1954,6 +1957,8 @@
         localStorage.setItem('bunk_days', JSON.stringify(bunkDays));
       }
       calMode = null;
+      calSelected.clear();
+      renderCalendar();
       renderCalConfirm();
       updateCalModeLabel();
       renderAttendance();
@@ -1976,8 +1981,6 @@
       else if (calMode === 'bunk') lbl.innerHTML = 'Select days to <span style="color:var(--danger)">bunk</span>';
       else lbl.innerHTML = 'Tap a working day to view timetable';
     }
-
-    // ── MARKS ──────────────────────────────────────────────────────────────────
     function numVal(v) {
       if (v === null || v === undefined) return null;
       if (typeof v === 'number') return v;
@@ -1985,14 +1988,11 @@
       const n = parseFloat(v);
       return isNaN(n) ? null : n;
     }
-
-    // Build a map from partial course code -> full title from attendance data
     function buildCourseTitleMap() {
       if (!appData || !appData.Attendance) return {};
       const map = {};
       appData.Attendance.forEach(a => {
         if (a.Code) map[a.Code.toUpperCase()] = a.Title;
-        // also store first 8 chars of code as key for fuzzy match
         if (a.Code && a.Code.length > 4) map[a.Code.slice(0, -1).toUpperCase()] = a.Title;
       });
       return map;
@@ -2013,15 +2013,12 @@
 
       const attMap = buildCourseTitleMap();
       appData.Marks.forEach(m => {
-        // Try to resolve a prettier title from attendance map
         let displayTitle = m.Title;
         if (appData.Attendance) {
-          // m.Title might be a course code like '21CSE281T' or already resolved
           const upper = m.Title.toUpperCase();
           if (attMap[upper]) {
             displayTitle = attMap[upper];
           } else {
-            // Try stripping last char suffix T/P/L/J
             const base = upper.replace(/[TPLJ]$/, '');
             const match = Object.entries(attMap).find(([k]) => k === base || k.startsWith(base) || base.startsWith(k));
             if (match) displayTitle = match[1];
@@ -2047,8 +2044,6 @@
         list.appendChild(div);
       });
     }
-
-    // ── CALENDAR ────────────────────────────────────────────────────────────────
     const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -2057,7 +2052,6 @@
       const [minY, minM] = dates.length ? dates[0].split('-').map(Number) : [calViewMonth.getFullYear(), calViewMonth.getMonth() + 1];
       const [maxY, maxM] = dates.length ? dates[dates.length - 1].split('-').map(Number) : [calViewMonth.getFullYear(), calViewMonth.getMonth() + 1];
       const next = new Date(calViewMonth.getFullYear(), calViewMonth.getMonth() + delta, 1);
-      // Constrain to semester bounds
       if (next.getFullYear() < minY || (next.getFullYear() === minY && next.getMonth() + 1 < minM)) return;
       if (next.getFullYear() > maxY || (next.getFullYear() === maxY && next.getMonth() + 1 > maxM)) return;
       calViewMonth = next;
@@ -2124,7 +2118,6 @@
             else if (isWorking) calSelected.add(dateStr);
             renderCalendar();
           } else if (isWorking) {
-            // Jump to screen 5 with this day's timetable
             jumpCalTarget = do_;
             goTo(4);
           }
@@ -2132,8 +2125,6 @@
         grid.appendChild(el);
       }
     }
-
-    // ── WEEKLY TT ─────────────────────────────────────────────────────────────
     function renderWeeklyTabs() {
       if (!appData) return;
       const tabs = document.getElementById('wtt-tabs');
@@ -2165,8 +2156,7 @@
       const CUTOFF_START = 8 * 60, CUTOFF_END = 16 * 60 + 50;
       let hasAny = false;
       let firstStart = null;
-
-      // Pre-scan to find first class start
+      let lastEnd = null;
       appData.ActiveCols.forEach(i => {
         const s = slots[i];
         if (!s || !s.title) return;
@@ -2175,17 +2165,17 @@
         if (!st || !en) return;
         if (timeToMins(en) > CUTOFF_END) return;
         const sm = timeToMins(st);
+        const em = timeToMins(en);
         if (firstStart === null || sm < firstStart) firstStart = sm;
+        if (lastEnd === null || em > lastEnd) lastEnd = em;
       });
-
-      // Show early free block if day starts late (>60 min gap)
       if (firstStart !== null && firstStart - CUTOFF_START > 60) {
         const freeDiv = document.createElement('div');
         freeDiv.className = 'tt-item is-free';
         freeDiv.innerHTML = `
           <div class="tt-time">${minsToTimeStr(CUTOFF_START)}\n${minsToTimeStr(firstStart)}</div>
           <div class="tt-dot"></div>
-          <div class="tt-info"><div class="tt-title">— free —</div></div>
+          <div class="tt-info"><div class="tt-title">No classes</div></div>
         `;
         list.appendChild(freeDiv);
       }
@@ -2209,12 +2199,21 @@
     `;
         list.appendChild(div);
       });
+      if (lastEnd !== null && CUTOFF_END - lastEnd >= 15) {
+        const freeDiv = document.createElement('div');
+        freeDiv.className = 'tt-item is-free';
+        freeDiv.innerHTML = `
+          <div class="tt-time">${minsToTimeStr(lastEnd)}\n16:50</div>
+          <div class="tt-dot"></div>
+          <div class="tt-info"><div class="tt-title">No classes</div></div>
+        `;
+        list.appendChild(freeDiv);
+      }
+
       if (!hasAny) {
         list.innerHTML = '<div style="color:var(--text3);font-family:\'DM Mono\',monospace;font-size:.75rem;padding:1rem 0;">No classes scheduled</div>';
       }
     }
-
-    // ── UTILS ──────────────────────────────────────────────────────────────────
     function showLoading(msg) {
       document.getElementById('load-msg').textContent = msg || 'LOADING';
       document.getElementById('loading').classList.remove('hidden');
@@ -2240,8 +2239,6 @@
         location.reload();
       }
     }
-
-    // ── BOOT ──────────────────────────────────────────────────────────────────
     (async () => {
       buildDots();
       updateODButtons();
