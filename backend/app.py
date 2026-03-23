@@ -215,9 +215,9 @@ def get_academic_planner(s):
                         day = int(date_val)
                         if 1 <= day <= 31:
                             date_key = f"{year_base}-{month_num:02d}-{day:02d}"
-                            calendar_map[date_key] = f"DO {do_val}"
+                            calendar_map[date_key] = f"Day {do_val}"
                             if day == now.day and month_num == now.month:
-                                today_do = f"DO {do_val}"
+                                today_do = f"Day {do_val}"
                     except:
                         pass
 
