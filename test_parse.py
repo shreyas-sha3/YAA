@@ -1,36 +1,106 @@
-import re
+import requests
+import time, urllib.parse, re, json, html
 from bs4 import BeautifulSoup
-import datetime
 
-html_doc = """
-<table align='center' cellspacing='0' cellpadding='0' border='1' style='border-color:#b4bed1'><th bgcolor='#410b5b' style='height:30px;padding:2px;'><strong><Font size=2 color = '#ffffff'>Dt</strong></font><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>Day</font></strong></th><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>Jan '26</font></strong></th><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>DO</font></strong></th><th bgcolor='#410b5b'><strong></strong></th><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>Dt</font></strong></th><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>Day</font></strong></th><th bgcolor='#410b5b' ><strong><Font size=2 color = '#ffffff'>Feb '26</font></strong></th><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>DO</font></strong></th><th bgcolor='#410b5b'><strong></strong></th><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>Dt</font></strong></th><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>Day</font></strong></th><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>Mar '26</font></strong></th><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>DO</font></strong></th><th bgcolor='#410b5b'><strong></strong></th><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>Dt</font></strong></th><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>Day</font></strong></th><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>Apr '26</font></strong></th><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>DO</font></strong></th><th bgcolor='#410b5b'><strong></strong></th><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>Dt</font></strong></th><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>Day</font></strong></th><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>May '26</font></strong></th><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>DO</font></strong></th><th bgcolor='#410b5b'><strong></strong><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>Dt</strong></font><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>Day</font></strong></th><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>Jun '26</font></strong></th><th bgcolor='#410b5b'><strong><Font size=2 color = '#ffffff'>DO</font></strong></th><th bgcolor='#410b5b'><strong></strong></th><tr><td bgcolor='#9a59b3' style='padding:5px'><Font size=2 color = '#FFFFFF'><strong>1</strong></td><td bgcolor='#354a5f' style='padding:5px'><Font size=2 color = '#FFFFFF'>Thu</td><td align = 'center'  bgcolor='#ccade1' style='padding:5px'><Font size=2 color = '#000000' style='font-weight:bold;'><strong>New Year’s Day - Holiday</strong></Font></td><td align = 'center' bgcolor='#587a4c' style='padding:5px'><Font size=2 color = '#ffffff'> - </font></td><td bgcolor='#4c7b8e'><Font size=2 color = '#ffffff'> - </font></td><td bgcolor='#9a59b3' style='padding:5px'><Font size=2 color = '#FFFFFF'><strong>1</strong></td><td bgcolor='#354a5f' style='padding:5px'><Font size=2 color = '#FFFFFF'>Sun</td><td align = 'center'  bgcolor='#ccade1' style='padding:5px'><Font size=2 color = '#000000' style='font-weight:bold;'><strong>Thaipoosam - Holiday</strong></Font></td><td align = 'center' bgcolor='#587a4c' style='padding:5px'><Font size=2 color = '#ffffff'> - </font></td><td bgcolor='#4c7b8e'><Font size=2 color = '#ffffff'> - </font></td><td bgcolor='#9a59b3' style='padding:5px'><Font size=2 color = '#FFFFFF'><strong>1</strong></td><td bgcolor='#354a5f' style='padding:5px'><Font size=2 color = '#FFFFFF'>Sun</td><td align = 'center'  bgcolor='#ccade1' style='padding:5px'><Font size=2 color = '#000000' style='font-weight:bold;'><strong></strong></Font></td><td align = 'center' bgcolor='#587a4c' style='padding:5px'><Font size=2 color = '#ffffff'> - </font></td><td bgcolor='#4c7b8e'><Font size=2 color = '#ffffff'> - </font></td><td bgcolor='#9a59b3' style='padding:5px'><Font size=2 color = '#FFFFFF'><strong>1</strong></td><td bgcolor='#354a5f' style='padding:5px'><Font size=2 color = '#FFFFFF'>Wed</td><td align = 'center'  bgcolor='#ccade1' style='padding:5px'><Font size=2 color = '#000000' style='font-weight:bold;'><strong></strong></Font></td><td align = 'center' bgcolor='#e6e2d3' style='padding:5px'>4</td><td bgcolor='#4c7b8e'><Font size=2 color = '#ffffff'> - </font></td><td bgcolor='#9a59b3' style='padding:5px'><Font size=2 color = '#FFFFFF'><strong>1</strong></td><td bgcolor='#354a5f' style='padding:5px'><Font size=2 color = '#FFFFFF'>Fri</td><td align = 'center'  bgcolor='#ccade1' style='padding:5px'><Font size=2 color = '#000000' style='font-weight:bold;'><strong>May Day - Holiday</strong></Font></td><td align = 'center' bgcolor='#587a4c' style='padding:5px'><Font size=2 color = '#ffffff'> - </font></td><td bgcolor='#4c7b8e'><Font size=2 color = '#ffffff'> - </font></td><td bgcolor='#9a59b3' style='padding:5px'><Font size=2 color = '#FFFFFF'><strong>1</strong></td><td bgcolor='#354a5f' style='padding:5px'><Font size=2 color = '#FFFFFF'>Mon</td><td align = 'center'  bgcolor='#ccade1' style='padding:5px'><Font size=2 color = '#000000' style='font-weight:bold;'><strong></strong></Font></td><td align = 'center' bgcolor='#587a4c' style='padding:5px'><Font size=2 color = '#ffffff'> - </font></td><td bgcolor='#4c7b8e'><Font size=2 color = '#ffffff'> - </font></td></tr>
-</table>
-"""
+# --- CREDENTIALS ---
+EMAIL = "hk2768@srmist.edu.in"
+PASSWORD = "H@ri@2006"
 
-soup = BeautifulSoup(html_doc, "html.parser")
-rows = soup.find("table").find_all("tr")[1:]
-month_range = range(0, 6)
-month_nums = [1, 2, 3, 4, 5, 6]
-year_base = 2026
+BASE = "https://academia.srmist.edu.in"
+PORTAL = f"{BASE}/srm_university/academia-academic-services/"
 
-calendar_map = {}
-for block_idx in month_range:
-    dt_idx = block_idx * 5
-    do_idx = block_idx * 5 + 3
-    month_num = month_nums[block_idx]
+def run_debugger():
+    print(f"[*] Starting Login for {EMAIL}...")
+    s = requests.Session()
+    
+    # Matching your exact browser headers
+    s.headers.update({
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:146.0) Gecko/20100101 Firefox/146.0",
+        "Accept": "*/*", 
+        "Accept-Language": "en-US,en;q=0.5", 
+        "Connection": "keep-alive"
+    })
 
-    for row in rows:
-        cells = row.find_all("td")
-        if len(cells) > do_idx:
-            date_val = cells[dt_idx].get_text(strip=True)
-            do_val = cells[do_idx].get_text(strip=True)
+    # --- LOGIN SEQUENCE ---
+    signin_url = f"{BASE}/accounts/p/10002227248/signin?orgtype=40&serviceurl={urllib.parse.quote(PORTAL + 'redirectFromLogin')}"
+    resp = s.get(signin_url, allow_redirects=False)
+    hops = 0
+    while resp.is_redirect and hops < 8:
+        loc = resp.headers.get('Location', '')
+        if loc.startswith('/'): loc = BASE + loc
+        resp = s.get(loc, allow_redirects=False)
+        hops += 1
+    if resp.is_redirect:
+        s.get(resp.headers.get('Location', signin_url))
+
+    csrf = s.cookies.get('iamcsrcoo') or s.cookies.get('_zcsr_tmp') or s.cookies.get('iamcsr')
+    
+    s.headers.update({
+        "x-zcsrf-token": f"iamcsrcoo={csrf}",
+        "Referer": f"{BASE}/",
+        "Content-Type": "application/x-www-form-urlencoded"
+    })
+
+    lookup_url = f"{BASE}/accounts/p/40-10002227248/signin/v2/lookup/{urllib.parse.quote(EMAIL)}"
+    res = s.post(lookup_url, data={"mode": "primary", "cli_time": str(int(time.time()*1000)), "orgtype": "40"}).json()
+    zuid, digest = res.get('lookup', {}).get('identifier'), res.get('lookup', {}).get('digest')
+    
+    pw_payload = json.dumps({"passwordauth": {"password": PASSWORD}})
+    auth_url = f"{BASE}/accounts/p/40-10002227248/signin/v2/primary/{zuid}/password"
+    auth_res = s.post(auth_url, params={"digest": digest, "cli_time": str(int(time.time()*1000)), "orgtype": "40"}, data=pw_payload, headers={"Content-Type": "application/json"}).json()
+    next_url = auth_res.get('passwordauth', {}).get('redirect_uri') or auth_res.get('href')
+
+    if auth_res.get('code') == 'SI303' and next_url and 'block-sessions' in next_url:
+        s.delete(f"{BASE}/accounts/p/40-10002227248/webclient/v1/announcement/pre/blocksessions")
+        auth_res2 = s.post(auth_url, params={"digest": digest, "cli_time": str(int(time.time()*1000)), "orgtype": "40"}, data=pw_payload, headers={"Content-Type": "application/json"}).json()
+        next_url = auth_res2.get('passwordauth', {}).get('redirect_uri')
+
+    if next_url.startswith('/'): next_url = BASE + next_url
+    s.get(next_url)
+    print("[+] Login Successful!\n")
+
+    # --- FETCHING DATA ---
+    # Append the strict AJAX headers just like the browser
+    s.headers.update({
+        "X-Requested-With": "XMLHttpRequest",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-origin"
+    })
+
+    links_to_test = ["My_Time_Table_2023_24", "My_Attendance"]
+    
+    for link in links_to_test:
+        print(f"=== Fetching: {link} ===")
+        url = f"{PORTAL}page/{link}"
+        
+        resp = s.get(url)
+        txt = resp.text
+        
+        print(f"[*] HTTP Status: {resp.status_code} | Length: {len(txt)}")
+        
+        if "pageSanitizer.sanitize" in txt:
+            print("[*] SUCCESS: 'pageSanitizer.sanitize' wrapper found!")
             
-            print(f"month={month_num} date={date_val} do_val='{do_val}'")
-            if date_val and do_val and do_val.isdigit():
-                day = int(date_val)
-                date_key = f"{year_base}-{month_num:02d}-{day:02d}"
-                calendar_map[date_key] = f"Day {do_val}"
+            # Test the exact Regex we use in the backend
+            m = re.search(r"pageSanitizer\.sanitize\('(.+?)'\)", txt, re.DOTALL)
+            if m:
+                print("[*] Regex matched! Extracting and parsing HTML...")
+                raw = m.group(1)
+                try:
+                    raw = html.unescape(raw).encode('utf-8').decode('unicode_escape')
+                except Exception:
+                    raw = html.unescape(raw)
+                
+                soup = BeautifulSoup(raw, 'html.parser')
+                tables = soup.find_all('table')
+                print(f"[*] Parsed {len(tables)} tables. Preview of first text snippet:")
+                print(f"    -> {soup.get_text(strip=True)[:100]}...\n")
+            else:
+                print("[!] ERROR: pageSanitizer found, but Regex failed to capture group.\n")
+        else:
+            print("[!] ERROR: 'pageSanitizer.sanitize' NOT found! Zoho gave us this instead:")
+            print(f"{txt[:500]}\n")
 
-print("calendar_map contains:")
-for k, v in calendar_map.items():
-    print(k, v)
+if __name__ == "__main__":
+    run_debugger()
