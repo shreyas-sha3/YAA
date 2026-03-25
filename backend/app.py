@@ -43,10 +43,10 @@ def make_http_session(token):
     return s
 
 def save_http_session(s):
-    allowed_cookies = {"JSESSIONID", "iamcsr", "_zcsr_tmp", "_z_identity", "stk"}
     cookies_list = []
+    # Retain core IAM, CSRF, and ZALB routing cookies. Drop tracking/analytics cookies.
     for c in s.cookies:
-        if c.name in allowed_cookies or c.name.startswith("zalb_"):
+        if "iam" in c.name.lower() or "zcsr" in c.name.lower() or "z_identity" in c.name.lower() or c.name in ("JSESSIONID", "stk", "zccpn", "CT_CSRF_TOKEN") or c.name.startswith("zalb_"):
             cookies_list.append({"name": c.name, "value": c.value, "domain": c.domain, "path": c.path})
             
     session_data = {
@@ -136,7 +136,11 @@ def profile():
         if "signinFrame" in res.text or "accounts/signin" in res.url:
             return jsonify({"ok": False, "error": "SESSION_EXPIRED"}), 401
             
-        rec = res.json()
+        try:
+            rec = res.json()
+        except ValueError:
+            return jsonify({"ok": False, "error": "SESSION_EXPIRED"}), 401
+            
         name_field = rec.get("MODEL", {}).get("DATAJSONARRAY", [{}])[0].get("Name", "")
         if " - " in name_field:
             reg, name = name_field.split(" - ", 1)
