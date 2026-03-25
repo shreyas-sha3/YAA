@@ -16,7 +16,7 @@ CORS(app, supports_credentials=False,
 _sessions = {}  # token -> {"cookies": list, "headers": dict}
 
 BASE = "https://academia.srmist.edu.in"
-PORTAL = f"{BASE}/portal/academia-academic-services/"
+PORTAL = f"{BASE}/srm_university/academia-academic-services/"
 
 def make_http_session(token):
     """Return or create a requests.Session for the given token."""
