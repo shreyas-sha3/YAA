@@ -157,6 +157,30 @@
       font-size: .9rem;
     }
 
+    .view-pw {
+      position: absolute;
+      right: .8rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      padding: .5rem;
+      cursor: pointer;
+      color: var(--text3);
+      display: flex;
+      align-items: center;
+      transition: color .2s;
+    }
+
+    .view-pw:hover {
+      color: var(--gold);
+    }
+
+    .view-pw svg {
+      fill: none;
+      stroke: currentColor;
+    }
+
     .login-btn {
       background: var(--gold);
       color: #000;
@@ -1103,12 +1127,12 @@
     @keyframes fadeUp {
       from {
         opacity: 0;
-        transform: translateY(12px);
+        translate: 0 12px;
       }
 
       to {
         opacity: 1;
-        transform: translateY(0);
+        translate: 0 0;
       }
     }
 
@@ -1263,6 +1287,12 @@
       <div class="input-wrap">
         <span class="input-icon">◆</span>
         <input id="inp-pw" type="password" placeholder="Password" autocomplete="current-password" />
+        <button type="button" class="view-pw" onclick="togglePW()" id="toggle-pw-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
       </div>
       <button class="login-btn" onclick="doLogin()">SIGN IN</button>
       <div class="login-error" id="login-err"></div>
@@ -1370,10 +1400,12 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    // const API = 'https://yaa-k29h.onrender.com/api';
-    const API = 'http://localhost:5000/api';
+    const API = 'https://yaa-k29h.onrender.com/api';
+    // const API = 'http://localhost:5000/api';
     const SCREENS = 5;
     let appToken = localStorage.getItem('academia_token') || '';
+    let relogPromise = null;
+    let lastRelogTime = 0;
     let appData = null;
     let curScreen = 0;
     let calMode = null; // 'od' | 'bunk' | null
@@ -1564,6 +1596,70 @@
         d.className = 'dot' + (i === curScreen ? ' active' : '');
       });
     }
+
+    async function apiFetch(path, options = {}) {
+      const url = path.startsWith('http') ? path : `${API}${path}`;
+      options.headers = options.headers || {};
+      if (appToken) options.headers['X-Session-Token'] = appToken;
+
+      try {
+        let r = await fetch(url, options);
+        let d = await r.clone().json().catch(() => ({}));
+
+        if ((r.status === 401 || d.error === "SESSION_EXPIRED") && !url.includes('/login') && !url.includes('/autologin')) {
+          const creds = localStorage.getItem('academia_creds');
+          if (creds) {
+            const now = Date.now();
+            if (now - lastRelogTime < 30000 && !relogPromise) {
+              showLoginScreen();
+              return d;
+            }
+
+            if (!relogPromise) {
+              relogPromise = (async () => {
+                try {
+                  const resp = await fetch(`${API}/autologin`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ creds })
+                  });
+                  const res = await resp.json();
+                  if (res.ok) {
+                    appToken = res.token;
+                    localStorage.setItem('academia_token', appToken);
+                    if (res.creds) localStorage.setItem('academia_creds', res.creds);
+                    lastRelogTime = Date.now();
+                    return true;
+                  }
+                } catch (e) { }
+                lastRelogTime = Date.now();
+                return false;
+              })();
+            }
+
+            const success = await relogPromise;
+            relogPromise = null;
+
+            if (success) {
+              options.headers['X-Session-Token'] = appToken;
+              const retryResp = await fetch(url, options);
+              return await retryResp.json();
+            } else {
+              showLoginScreen();
+              showToast("Session expired. Please login again.");
+              return d;
+            }
+          } else {
+            showLoginScreen();
+            return d;
+          }
+        }
+        return d;
+      } catch (e) {
+        console.error("API Fetch Error:", e);
+        throw e;
+      }
+    }
     async function doLogin() {
       const id = document.getElementById('inp-id').value.trim();
       const pw = document.getElementById('inp-pw').value;
@@ -1572,14 +1668,14 @@
       err.textContent = '';
       showLoading('AUTHENTICATING');
       try {
-        const r = await fetch(`${API}/login`, {
+        const d = await apiFetch('/login', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: id, password: pw })
         });
-        const d = await r.json();
         if (d.ok) {
           appToken = d.token;
           localStorage.setItem('academia_token', appToken);
+          if (d.creds) localStorage.setItem('academia_creds', d.creds);
           document.getElementById('login-screen').classList.add('hidden');
           await loadData();
         } else {
@@ -1608,8 +1704,8 @@
         showLoading('FETCHING DATA');
         try {
           const [prof, data] = await Promise.all([
-            fetch(`${API}/profile`, { headers: { 'X-Session-Token': appToken } }).then(r => r.json()),
-            fetch(`${API}/data`, { headers: { 'X-Session-Token': appToken } }).then(r => r.json())
+            apiFetch('/profile'),
+            apiFetch('/data')
           ]);
 
           if (!prof.ok || !data.ok) {
@@ -1633,7 +1729,11 @@
 
         } catch (e) {
           hideLoading();
-          showLoginScreen();
+          if (cached) {
+            showToast("Offline mode. Some data may be outdated.");
+          } else {
+            showLoginScreen();
+          }
         }
       }
     }
@@ -1681,10 +1781,13 @@
     }
 
     async function syncDataInBackground() {
-      document.getElementById('hdr-name').innerHTML += ' <span style="font-size:0.5rem;color:var(--gold);animation:spin 1s linear infinite;display:inline-block;">↻</span>';
+      const nameEl = document.getElementById('hdr-name');
+      const originalText = nameEl.textContent;
+      nameEl.innerHTML = originalText + ' <span style="font-size:0.5rem;color:var(--gold);animation:spin 1s linear infinite;display:inline-block;">↻</span>';
       try {
-        const r = await fetch(`${API}/data?sync=true`, { headers: { 'X-Session-Token': appToken } });
-        const d = await r.json();
+        const d = await apiFetch(`/data?sync=true`, {
+          signal: AbortSignal.timeout(15000)
+        });
         if (d.ok) {
           if ((!d.Attendance || d.Attendance.length === 0) && (!d.Marks || d.Marks.length === 0) && appData.Attendance && appData.Attendance.length > 0) {
             appData.syncFailed = true;
@@ -1696,10 +1799,25 @@
           }
           renderAttendance();
           renderMarks();
+          renderToday();
         }
-      } catch (e) { }
+      } catch (e) {
+        console.warn("Background sync failed", e);
+      }
       const name = localStorage.getItem('yaa_user');
-      if (name) document.getElementById('hdr-name').textContent = name;
+      if (name) nameEl.textContent = name;
+    }
+
+    function togglePW() {
+      const p = document.getElementById('inp-pw');
+      const b = document.getElementById('toggle-pw-btn');
+      if (p.type === 'password') {
+        p.type = 'text';
+        b.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+      } else {
+        p.type = 'password';
+        b.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+      }
     }
 
     function showLoginScreen() {
@@ -2308,16 +2426,19 @@
         document.getElementById('login-screen').classList.add('hidden');
         showLoading('CONNECTING');
         try {
-          const p = await fetch(`${API}/profile`, { headers: { 'X-Session-Token': appToken } });
-          const pj = await p.json();
+          const pj = await apiFetch('/profile', {
+            signal: AbortSignal.timeout(10000)
+          });
           if (pj.ok) {
             await loadData();
             return;
           }
-        } catch (e) { }
+        } catch (e) {
+          await loadData();
+          return;
+        }
         hideLoading();
-        document.getElementById('login-screen').classList.remove('hidden');
-        document.getElementById('login-err').textContent = 'Session expired. Please sign in again.';
+        showLoginScreen();
       } else {
         document.getElementById('login-screen').classList.remove('hidden');
         document.getElementById('loading').classList.add('hidden');

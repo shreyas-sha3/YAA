@@ -12,6 +12,7 @@ from itsdangerous import URLSafeSerializer, BadSignature
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
 serializer = URLSafeSerializer(app.secret_key)
+creds_serializer = URLSafeSerializer(app.secret_key, salt="creds-auth")
 
 CORS(app, supports_credentials=False, 
      origins=["https://yetanotheracademia.web.app", "http://localhost:5000", "http://127.0.0.1:5000", "http://localhost:5500", "http://127.0.0.1:5500"],
@@ -120,11 +121,33 @@ def login():
             return jsonify({"ok": False, "error": "Login failed — still on signin page"}), 401
 
         token = save_http_session(s)
-        return jsonify({"ok": True, "token": token})
+        creds_blob = creds_serializer.dumps({"email": email, "password": password})
+        return jsonify({"ok": True, "token": token, "creds": creds_blob})
 
     except Exception as e:
         import traceback; traceback.print_exc()
         return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/autologin", methods=["POST"])
+def autologin():
+    data = request.json or {}
+    creds_blob = data.get("creds", "")
+    if not creds_blob:
+        return jsonify({"ok": False, "error": "No credentials provided"}), 400
+
+    try:
+        creds = creds_serializer.loads(creds_blob)
+        email = creds.get("email")
+        password = creds.get("password")
+        if not email or not password:
+            return jsonify({"ok": False, "error": "Invalid credential blob"}), 400
+        
+        # Reuse login logic
+        request.json = {"email": email, "password": password}
+        return login()
+    except (BadSignature, Exception):
+        return jsonify({"ok": False, "error": "Invalid or expired credentials"}), 401
 
 
 @app.route("/api/profile", methods=["GET"])
