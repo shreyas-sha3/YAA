@@ -65,68 +65,70 @@ def login():
     data = request.json or {}
     email = data.get("email", "").strip()
     password = data.get("password", "")
-
+    try:
+        token, creds_blob = perform_login(email, password)
+        return jsonify({"ok": True, "token": token, "creds": creds_blob})
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return jsonify({"ok": False, "error": str(e)}), 401
+    
+def perform_login(email, password):
     if not email.endswith("@srmist.edu.in"):
         email += "@srmist.edu.in"
 
     s = make_http_session("")
-    try:
-        signin_url = f"{BASE}/accounts/p/10002227248/signin?orgtype=40&serviceurl={urllib.parse.quote(PORTAL + 'redirectFromLogin')}"
-        resp = s.get(signin_url, allow_redirects=False)
-        hops = 0
-        while resp.is_redirect and hops < 8:
-            loc = resp.headers.get('Location', '')
-            if loc.startswith('/'): loc = BASE + loc
-            resp = s.get(loc, allow_redirects=False)
-            hops += 1
-        if resp.is_redirect:
-            s.get(resp.headers.get('Location', signin_url))
+    signin_url = f"{BASE}/accounts/p/10002227248/signin?orgtype=40&serviceurl={urllib.parse.quote(PORTAL + 'redirectFromLogin')}"
+    resp = s.get(signin_url, allow_redirects=False)
+    hops = 0
+    while resp.is_redirect and hops < 8:
+        loc = resp.headers.get('Location', '')
+        if loc.startswith('/'): loc = BASE + loc
+        resp = s.get(loc, allow_redirects=False)
+        hops += 1
+    if resp.is_redirect:
+        s.get(resp.headers.get('Location', signin_url))
 
-        csrf = s.cookies.get('iamcsrcoo') or s.cookies.get('_zcsr_tmp') or s.cookies.get('iamcsr')
+    csrf = s.cookies.get('iamcsrcoo') or s.cookies.get('_zcsr_tmp') or s.cookies.get('iamcsr')
+    if not csrf:
+        raise Exception(f"Could not get CSRF token. Cookies: {list(s.cookies.keys())}")
 
-        if not csrf:
-            return jsonify({"ok": False, "error": f"Could not get CSRF token. Cookies: {list(s.cookies.keys())}"}), 401
+    s.headers.update({
+        "x-zcsrf-token": f"iamcsrcoo={csrf}",
+        "Referer": f"{BASE}/",
+        "Content-Type": "application/x-www-form-urlencoded"
+    })
 
-        s.headers.update({
-            "x-zcsrf-token": f"iamcsrcoo={csrf}",
-            "Referer": f"{BASE}/",
-            "Content-Type": "application/x-www-form-urlencoded"
-        })
+    lookup_url = f"{BASE}/accounts/p/40-10002227248/signin/v2/lookup/{urllib.parse.quote(email)}"
+    res = s.post(lookup_url, data={"mode": "primary", "cli_time": str(int(time.time()*1000)), "orgtype": "40"}).json()
 
-        lookup_url = f"{BASE}/accounts/p/40-10002227248/signin/v2/lookup/{urllib.parse.quote(email)}"
-        res = s.post(lookup_url, data={"mode": "primary", "cli_time": str(int(time.time()*1000)), "orgtype": "40"}).json()
+    lookup = res.get('lookup', {})
+    zuid, digest = lookup.get('identifier'), lookup.get('digest')
+    if not zuid:
+        raise Exception(f"User not found. Response: {str(res)[:300]}")
 
-        zuid, digest = res.get('lookup', {}).get('identifier'), res.get('lookup', {}).get('digest')
-        if not zuid:
-            return jsonify({"ok": False, "error": f"User not found. Response: {str(res)[:300]}"}), 401
+    pw_payload = json.dumps({"passwordauth": {"password": password}})
+    auth_url = f"{BASE}/accounts/p/40-10002227248/signin/v2/primary/{zuid}/password"
+    auth_res = s.post(auth_url, params={"digest": digest, "cli_time": str(int(time.time()*1000)), "orgtype": "40"}, data=pw_payload, headers={"Content-Type": "application/json"}).json()
 
-        pw_payload = json.dumps({"passwordauth": {"password": password}})
-        auth_url = f"{BASE}/accounts/p/40-10002227248/signin/v2/primary/{zuid}/password"
-        auth_res = s.post(auth_url, params={"digest": digest, "cli_time": str(int(time.time()*1000)), "orgtype": "40"}, data=pw_payload, headers={"Content-Type": "application/json"}).json()
+    next_url = auth_res.get('passwordauth', {}).get('redirect_uri') or auth_res.get('href')
 
-        next_url = auth_res.get('passwordauth', {}).get('redirect_uri') or auth_res.get('href')
+    if auth_res.get('code') == 'SI303' and next_url and 'block-sessions' in next_url:
+        s.delete(f"{BASE}/accounts/p/40-10002227248/webclient/v1/announcement/pre/blocksessions")
+        auth_res2 = s.post(auth_url, params={"digest": digest, "cli_time": str(int(time.time()*1000)), "orgtype": "40"}, data=pw_payload, headers={"Content-Type": "application/json"}).json()
+        next_url = auth_res2.get('passwordauth', {}).get('redirect_uri')
 
-        if auth_res.get('code') == 'SI303' and next_url and 'block-sessions' in next_url:
-            s.delete(f"{BASE}/accounts/p/40-10002227248/webclient/v1/announcement/pre/blocksessions")
-            auth_res2 = s.post(auth_url, params={"digest": digest, "cli_time": str(int(time.time()*1000)), "orgtype": "40"}, data=pw_payload, headers={"Content-Type": "application/json"}).json()
-            next_url = auth_res2.get('passwordauth', {}).get('redirect_uri')
+    if not next_url:
+        raise Exception(f"No redirect URL. Auth response: {str(auth_res)[:400]}")
 
-        if not next_url:
-            return jsonify({"ok": False, "error": f"No redirect URL. Auth response: {str(auth_res)[:400]}"}), 401
+    if next_url.startswith('/'): next_url = BASE + next_url
 
-        if next_url.startswith('/'): next_url = BASE + next_url
+    final = s.get(next_url).text
+    if "signinFrame" in final:
+        raise Exception("Login failed — still on signin page")
 
-        final = s.get(next_url).text
-        if "signinFrame" in final:
-            return jsonify({"ok": False, "error": "Login failed — still on signin page"}), 401
-
-        token = save_http_session(s)
-        creds_blob = creds_serializer.dumps({"email": email, "password": password})
-        return jsonify({"ok": True, "token": token, "creds": creds_blob})
-
-    except Exception as e:
-        import traceback; traceback.print_exc()
-        return jsonify({"ok": False, "error": str(e)}), 500
+    token = save_http_session(s)
+    creds_blob = creds_serializer.dumps({"email": email, "password": password})
+    return token, creds_blob
 
 
 @app.route("/api/autologin", methods=["POST"])
@@ -143,11 +145,11 @@ def autologin():
         if not email or not password:
             return jsonify({"ok": False, "error": "Invalid credential blob"}), 400
         
-        # Reuse login logic
-        request.json = {"email": email, "password": password}
-        return login()
-    except (BadSignature, Exception):
-        return jsonify({"ok": False, "error": "Invalid or expired credentials"}), 401
+        token, new_creds_blob = perform_login(email, password)
+        return jsonify({"ok": True, "token": token, "creds": new_creds_blob})
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return jsonify({"ok": False, "error": f"Auto-login failed: {str(e)}"}), 401
 
 
 @app.route("/api/profile", methods=["GET"])

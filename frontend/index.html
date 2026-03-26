@@ -1124,6 +1124,58 @@
       animation-delay: calc(var(--i, 0) * 0.04s);
     }
 
+    /* ── STALE STATE ── */
+    .stale-banner {
+      position: sticky;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 171, 0, 0.1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(255, 171, 0, 0.2);
+      padding: .75rem 1rem;
+      margin: 0 -1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      z-index: 10;
+      animation: slideInUp .4s ease-out;
+    }
+
+    .stale-text {
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem;
+      color: var(--warn);
+      line-height: 1.4;
+    }
+
+    .stale-relogin {
+      padding: .4rem .8rem;
+      background: var(--gold);
+      color: #000;
+      border: none;
+      border-radius: 20px;
+      font-family: 'Syne', sans-serif;
+      font-size: .65rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    @keyframes slideInUp {
+      from {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
     @keyframes fadeUp {
       from {
         opacity: 0;
@@ -1643,17 +1695,32 @@
             if (success) {
               options.headers['X-Session-Token'] = appToken;
               const retryResp = await fetch(url, options);
-              return await retryResp.json();
+              const retryData = await retryResp.json();
+              if (retryData.ok && appData) appData.syncFailed = false;
+              return retryData;
             } else {
-              showLoginScreen();
-              showToast("Session expired. Please login again.");
+              if (appData) {
+                appData.syncFailed = true;
+                renderAttendance();
+                renderMarks();
+                showToast("Background sync failed. Data may be stale.");
+              } else {
+                showLoginScreen();
+              }
               return d;
             }
           } else {
-            showLoginScreen();
+            if (appData) {
+              appData.syncFailed = true;
+              renderAttendance();
+              renderMarks();
+            } else {
+              showLoginScreen();
+            }
             return d;
           }
         }
+        if (d.ok && appData) appData.syncFailed = false;
         return d;
       } catch (e) {
         console.error("API Fetch Error:", e);
@@ -2021,14 +2088,6 @@
       const processed = calcAttendance(appData.Attendance);
       list.innerHTML = '';
 
-      if (appData.syncFailed) {
-        const warn = document.createElement('div');
-        warn.style.cssText = "text-align:center;font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--warn);margin-bottom:0.5rem;padding:0.5rem;border:1px solid var(--warn-dim);background:var(--surface2);border-radius:var(--r2);cursor:pointer;";
-        warn.innerHTML = "Session expired. Tap here to login and fetch latest details.";
-        warn.onclick = () => { localStorage.clear(); location.reload(); };
-        list.appendChild(warn);
-      }
-
       const theory = processed.filter(a => typeof a.Category !== 'string' || !a.Category.toLowerCase().includes('practical'));
       const practical = processed.filter(a => typeof a.Category === 'string' && a.Category.toLowerCase().includes('practical'));
 
@@ -2073,6 +2132,16 @@
           list.appendChild(sep);
         }
         practical.forEach(renderItem);
+      }
+
+      if (appData.syncFailed) {
+        const bn = document.createElement('div');
+        bn.className = 'stale-banner';
+        bn.innerHTML = `
+          <div class="stale-text">Session expired.<br>Data might be outdated.</div>
+          <button class="stale-relogin" onclick="localStorage.removeItem('academia_token'); location.reload();">RE-LOGIN</button>
+        `;
+        list.appendChild(bn);
       }
     }
     function updateODButtons() {
@@ -2173,14 +2242,6 @@
       const list = document.getElementById('marks-list');
       list.innerHTML = '';
 
-      if (appData.syncFailed) {
-        const warn = document.createElement('div');
-        warn.style.cssText = "text-align:center;font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--warn);margin-bottom:0.5rem;padding:0.5rem;border:1px solid var(--warn-dim);background:var(--surface2);border-radius:var(--r2);cursor:pointer;";
-        warn.innerHTML = "Session expired. Tap here to login and fetch latest details.";
-        warn.onclick = () => { localStorage.clear(); location.reload(); };
-        list.appendChild(warn);
-      }
-
       const attMap = buildCourseTitleMap();
       appData.Marks.forEach((m, idx) => {
         let displayTitle = m.Title;
@@ -2214,6 +2275,16 @@
     `;
         list.appendChild(div);
       });
+
+      if (appData.syncFailed) {
+        const bn = document.createElement('div');
+        bn.className = 'stale-banner';
+        bn.innerHTML = `
+          <div class="stale-text">Session expired.<br>Data might be outdated.</div>
+          <button class="stale-relogin" onclick="localStorage.removeItem('academia_token'); location.reload();">RE-LOGIN</button>
+        `;
+        list.appendChild(bn);
+      }
     }
     const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
