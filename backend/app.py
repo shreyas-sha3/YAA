@@ -203,7 +203,7 @@ def get_valid_soup(s, candidates):
 def get_academic_planner(s):
     dash = s.get(PORTAL).text
     match = re.search(r'"PAGELINKNAME":"(Academic_Planner_[^"]+)"', dash)
-    planner_link = match.group(1) if match else "Academic_Planner_2025_26_EVEN"
+    planner_link = match.group(1) if match else "Academic_Planner_2026_27_ODD"
     soup = get_html(s, f"{PORTAL}page/{planner_link}")
     if not soup or not soup.find('table'): return None, {}
 
@@ -246,7 +246,7 @@ def get_data():
         if not partial:
             # Smart TT Fetch
             tt_matches = re.findall(r'"PAGELINKNAME":"(My_Time_Table_[^"]+)"', dash_html)
-            tt_candidates = tt_matches + ["My_Time_Table_2023_24", "My_Time_Table_2025_26_EVEN", "My_Time_Table"]
+            tt_candidates = tt_matches + ["My_Time_Table_2023_24", "My_Time_Table_2026_27_ODD", "My_Time_Table_2025_26_ODD", "My_Time_Table"]
             soup_tt = get_valid_soup(s, tt_candidates)
             
             if soup_tt is None:
@@ -278,7 +278,7 @@ def get_data():
             # Smart Unified TT Fetch
             suffix = 'Batch_1' if batch == '1' else 'batch_2'
             uni_matches = re.findall(r'"PAGELINKNAME":"(Unified_Time_Table_[^"]+)"', dash_html)
-            uni_candidates = uni_matches + [f"Unified_Time_Table_2023_24", f"Unified_Time_Table_2025_26_EVEN_{suffix}", f"Unified_Time_Table_2025_{suffix}"]
+            uni_candidates = uni_matches + [f"Unified_Time_Table_2023_24", f"Unified_Time_Table_2026_27_ODD_{suffix}", f"Unified_Time_Table_2025_26_ODD_{suffix}", f"Unified_Time_Table_2025_{suffix}"]
             soup_uni = get_valid_soup(s, uni_candidates)
         else:
             soup_uni = None
