@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests as req
 import time, urllib.parse, re, datetime, html, json
@@ -45,7 +45,6 @@ def make_http_session(token):
 
 def save_http_session(s):
     cookies_list = []
-    # Retain core IAM, CSRF, and ZALB routing cookies. Drop tracking/analytics cookies.
     for c in s.cookies:
         if "iam" in c.name.lower() or "zcsr" in c.name.lower() or "z_identity" in c.name.lower() or c.name in ("JSESSIONID", "stk", "zccpn", "CT_CSRF_TOKEN") or c.name.startswith("zalb_"):
             cookies_list.append({"name": c.name, "value": c.value, "domain": c.domain, "path": c.path})
@@ -60,6 +59,20 @@ def get_token():
     t = request.headers.get("X-Session-Token") or request.cookies.get("academia_token")
     return t or ""
 
+def get_html(s, url):
+    """Fetches and parses Zoho Creator pages directly."""
+    s.headers.update({"X-Requested-With": "XMLHttpRequest"})
+    txt = s.get(url).text
+    m = re.search(r"pageSanitizer\.sanitize\('(.+?)'\)", txt, re.DOTALL) or \
+        re.search(r'zmlvalue="(.+?)"', txt, re.DOTALL)
+    if not m: return None
+    
+    raw = m.group(1)
+    raw = raw.replace(r'\x22', '"').replace(r'\x27', "'").replace(r'\/', '/').replace(r'\-', '-').replace(r'\n', '\n').replace(r'\t', '\t')
+    raw = html.unescape(raw)
+    
+    return BeautifulSoup(raw, 'html.parser')
+
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.json or {}
@@ -69,7 +82,6 @@ def login():
         token, creds_blob = perform_login(email, password)
         return jsonify({"ok": True, "token": token, "creds": creds_blob})
     except Exception as e:
-        import traceback; traceback.print_exc()
         return jsonify({"ok": False, "error": str(e)}), 401
     
 def perform_login(email, password):
@@ -130,7 +142,6 @@ def perform_login(email, password):
     creds_blob = creds_serializer.dumps({"email": email, "password": password})
     return token, creds_blob
 
-
 @app.route("/api/autologin", methods=["POST"])
 def autologin():
     data = request.json or {}
@@ -142,15 +153,10 @@ def autologin():
         creds = creds_serializer.loads(creds_blob)
         email = creds.get("email")
         password = creds.get("password")
-        if not email or not password:
-            return jsonify({"ok": False, "error": "Invalid credential blob"}), 400
-        
         token, new_creds_blob = perform_login(email, password)
         return jsonify({"ok": True, "token": token, "creds": new_creds_blob})
     except Exception as e:
-        import traceback; traceback.print_exc()
         return jsonify({"ok": False, "error": f"Auto-login failed: {str(e)}"}), 401
-
 
 @app.route("/api/profile", methods=["GET"])
 def profile():
@@ -161,11 +167,7 @@ def profile():
         if "signinFrame" in res.text or "accounts/signin" in res.url:
             return jsonify({"ok": False, "error": "SESSION_EXPIRED"}), 401
             
-        try:
-            rec = res.json()
-        except ValueError:
-            return jsonify({"ok": False, "error": "SESSION_EXPIRED"}), 401
-            
+        rec = res.json()
         name_field = rec.get("MODEL", {}).get("DATAJSONARRAY", [{}])[0].get("Name", "")
         if " - " in name_field:
             reg, name = name_field.split(" - ", 1)
@@ -173,63 +175,6 @@ def profile():
         return jsonify({"ok": True, "name": name_field, "reg": ""})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
-
-def get_html(s, url):
-    s.headers.update({"X-Requested-With": "XMLHttpRequest"})
-    txt = s.get(url).text
-    m = re.search(r"pageSanitizer\.sanitize\('(.+?)'\)", txt, re.DOTALL) or \
-        re.search(r'zmlvalue="(.+?)"', txt, re.DOTALL)
-    if not m: return None
-    
-    raw = m.group(1)
-    
-    # Python 3.12+ safe string replacement
-    raw = raw.replace(r'\x22', '"').replace(r'\x27', "'").replace(r'\/', '/').replace(r'\-', '-').replace(r'\n', '\n').replace(r'\t', '\t')
-    raw = html.unescape(raw)
-    
-    return BeautifulSoup(raw, 'html.parser')
-
-def get_valid_soup(s, candidates):
-    """Iterates through possible URLs until one successfully returns parsed HTML."""
-    seen = set()
-    for link in candidates:
-        if link in seen: continue
-        seen.add(link)
-        soup = get_html(s, f"{PORTAL}page/{link}")
-        if soup is not None:
-            return soup
-    return None
-
-def get_academic_planner(s):
-    dash = s.get(PORTAL).text
-    match = re.search(r'"PAGELINKNAME":"(Academic_Planner_[^"]+)"', dash)
-    planner_link = match.group(1) if match else "Academic_Planner_2026_27_ODD"
-    soup = get_html(s, f"{PORTAL}page/{planner_link}")
-    if not soup or not soup.find('table'): return None, {}
-
-    now = datetime.datetime.now()
-    month_range, month_nums = (range(0, 6), [1, 2, 3, 4, 5, 6]) if "EVEN" in planner_link.upper() else (range(0, 6), [7, 8, 9, 10, 11, 12])
-    year_base = now.year
-
-    calendar_map, today_do = {}, None
-    rows = soup.find('table').find_all('tr')
-
-    for block_idx in month_range:
-        dt_idx, do_idx, month_num = block_idx * 5, block_idx * 5 + 3, month_nums[block_idx]
-        for row in rows:
-            cells = row.find_all('td')
-            if len(cells) > do_idx:
-                date_val, do_val = cells[dt_idx].get_text(strip=True), cells[do_idx].get_text(strip=True)
-                if date_val and do_val and do_val.isdigit():
-                    try:
-                        day = int(date_val)
-                        if 1 <= day <= 31:
-                            date_key = f"{year_base}-{month_num:02d}-{day:02d}"
-                            calendar_map[date_key] = f"Day {do_val}"
-                            if day == now.day and month_num == now.month: today_do = f"Day {do_val}"
-                    except: pass
-
-    return today_do, calendar_map
 
 @app.route("/api/data", methods=["GET"])
 def get_data():
@@ -239,22 +184,17 @@ def get_data():
     try:
         partial = request.args.get('sync') == 'true'
         batch, my_slots, grid, active_indices = "2", {}, {}, []
-        today_do, calendar_map, soup_tt = None, {}, None
-        
-        dash_html = s.get(PORTAL).text
+        today_do, calendar_map = None, {}
         
         if not partial:
-            # Smart TT Fetch
-            tt_matches = re.findall(r'"PAGELINKNAME":"(My_Time_Table_[^"]+)"', dash_html)
-            tt_candidates = tt_matches + ["My_Time_Table_2023_24", "My_Time_Table_2026_27_ODD", "My_Time_Table_2025_26_ODD", "My_Time_Table"]
-            soup_tt = get_valid_soup(s, tt_candidates)
-            
-            if soup_tt is None:
-                return jsonify({"ok": False, "error": "SESSION_EXPIRED"}), 401
+            # STRICT FETCH: My_Time_Table_2023_24
+            soup_tt = get_html(s, f"{PORTAL}page/My_Time_Table_2023_24")
+            if not soup_tt:
+                return jsonify({"ok": False, "error": "SESSION_EXPIRED or Parsing Failed"}), 401
 
-        if soup_tt:
             lbl = soup_tt.find('td', string=re.compile(r'Batch:', re.I))
             batch = "1" if lbl and '1' in lbl.find_next_sibling('td').get_text() else "2"
+            
             for t in soup_tt.find_all('table'):
                 tds = t.find_all(['td', 'th'])
                 if any('slot' in td.get_text().lower() for td in tds):
@@ -273,50 +213,62 @@ def get_data():
                                         "Room": chunk[rc].get_text(strip=True) if rc < len(chunk) else ""
                                     }
                     break
-        
-        if not partial:
-            # Smart Unified TT Fetch
-            suffix = 'Batch_1' if batch == '1' else 'batch_2'
-            uni_matches = re.findall(r'"PAGELINKNAME":"(Unified_Time_Table_[^"]+)"', dash_html)
-            uni_candidates = uni_matches + [f"Unified_Time_Table_2023_24", f"Unified_Time_Table_2026_27_ODD_{suffix}", f"Unified_Time_Table_2025_26_ODD_{suffix}", f"Unified_Time_Table_2025_{suffix}"]
-            soup_uni = get_valid_soup(s, uni_candidates)
-        else:
-            soup_uni = None
-            
-        rows = soup_uni.find_all('tr') if soup_uni else []
-        times = [td.get_text(strip=True).replace('\t', '') for td in rows[0].find_all('td')[1:]] if rows else []
-        matrix = {}
-        for r in rows:
-            if "Day" in r.get_text():
-                cells = r.find_all('td')
-                if cells: matrix[cells[0].get_text(strip=True)] = [td.get_text(strip=True) for td in cells[1:]]
 
-        has_class = [False] * len(times)
-        for day, slots in matrix.items():
-            grid[day] = []
-            for i, slot_str in enumerate(slots[:len(times)]):
-                parts = slot_str.split('/')
-                match = next((my_slots[p.strip()] for p in parts if p.strip() in my_slots), None)
-                if match: has_class[i] = True
-                is_lab = slot_str.strip().upper().startswith('P') and match is not None
-                
-                grid[day].append({
-                    "time": times[i] if i < len(times) else "",
-                    "title": match["Title"] if match else None,
-                    "room": match["Room"] if match else "",
-                    "isLab": is_lab,
-                    "slots": slot_str
-                })
-        active_indices = [i for i, v in enumerate(has_class) if v]
-        
-        # Smart Attendance Fetch
-        att_matches = re.findall(r'"PAGELINKNAME":"([^"]*Attendance[^"]*)"', dash_html, re.I)
-        att_candidates = ["My_Attendance"] + att_matches
-        soup_att = get_valid_soup(s, att_candidates)
-        
-        if soup_att is None:
-            return jsonify({"ok": False, "error": "SESSION_EXPIRED"}), 401
+            # STRICT FETCH: Unified Time Table
+            suffix = 'Batch_1' if batch == '1' else 'batch_2'
+            soup_uni = get_html(s, f"{PORTAL}page/Unified_Time_Table_2025_{suffix}")
             
+            rows = soup_uni.find_all('tr') if soup_uni else []
+            times = [td.get_text(strip=True).replace('\t', '') for td in rows[0].find_all('td')[1:]] if rows else []
+            matrix = {}
+            for r in rows:
+                if "Day" in r.get_text():
+                    cells = r.find_all('td')
+                    if cells: matrix[cells[0].get_text(strip=True)] = [td.get_text(strip=True) for td in cells[1:]]
+
+            has_class = [False] * len(times)
+            for day, slots in matrix.items():
+                grid[day] = []
+                for i, slot_str in enumerate(slots[:len(times)]):
+                    parts = slot_str.split('/')
+                    match = next((my_slots[p.strip()] for p in parts if p.strip() in my_slots), None)
+                    if match: has_class[i] = True
+                    is_lab = slot_str.strip().upper().startswith('P') and match is not None
+                    
+                    grid[day].append({
+                        "time": times[i] if i < len(times) else "",
+                        "title": match["Title"] if match else None,
+                        "room": match["Room"] if match else "",
+                        "isLab": is_lab,
+                        "slots": slot_str
+                    })
+            active_indices = [i for i, v in enumerate(has_class) if v]
+            
+            # STRICT FETCH: Academic Planner
+            soup_cal = get_html(s, f"{PORTAL}page/Academic_Planner_2026_27_ODD")
+            if soup_cal and soup_cal.find('table'):
+                now = datetime.datetime.now()
+                month_range, month_nums = range(0, 6), [7, 8, 9, 10, 11, 12]
+                year_base = now.year
+                
+                rows = soup_cal.find('table').find_all('tr')
+                for block_idx in month_range:
+                    dt_idx, do_idx, month_num = block_idx * 5, block_idx * 5 + 3, month_nums[block_idx]
+                    for row in rows:
+                        cells = row.find_all('td')
+                        if len(cells) > do_idx:
+                            date_val, do_val = cells[dt_idx].get_text(strip=True), cells[do_idx].get_text(strip=True)
+                            if date_val and do_val and do_val.isdigit():
+                                try:
+                                    day = int(date_val)
+                                    if 1 <= day <= 31:
+                                        date_key = f"{year_base}-{month_num:02d}-{day:02d}"
+                                        calendar_map[date_key] = f"Day {do_val}"
+                                        if day == now.day and month_num == now.month: today_do = f"Day {do_val}"
+                                except: pass
+        
+        # STRICT FETCH: Attendance (Runs for both full and partial syncing)
+        soup_att = get_html(s, f"{PORTAL}page/My_Attendance")
         att, mks, seen_att, seen_mks = [], [], set(), set()
         course_titles = {}
 
@@ -363,9 +315,6 @@ def get_data():
                                             actual_title = v; break
                                 mks.append({"Title": actual_title or code, "Components": components})
 
-        if not partial:
-            today_do, calendar_map = get_academic_planner(s)
-
         if partial:
             return jsonify({"ok": True, "Attendance": att, "Marks": mks})
 
@@ -376,7 +325,8 @@ def get_data():
         })
 
     except Exception as e:
-        import traceback; traceback.print_exc()
+        import traceback
+        traceback.print_exc()
         return jsonify({"ok": False, "error": str(e)}), 500
 
 @app.route("/api/health", methods=["GET", "HEAD"])
