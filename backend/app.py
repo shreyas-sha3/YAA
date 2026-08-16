@@ -33,7 +33,7 @@ CORS(
         "http://localhost:5000",
         "http://127.0.0.1:5000",
         "http://localhost:5500",
-        "http://127.0.0.1:5500",
+        "*",
     ],
     allow_headers=["Content-Type", "X-Session-Token"],
     methods=["GET", "POST", "OPTIONS"],
@@ -48,14 +48,26 @@ USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Ge
 
 
 # ==========================================
-# TIME HELPER (Fixes Singapore / Cloud Hosting timezone issues)
+# TIME HELPER
 # ==========================================
 def get_ist_now():
-    """Returns current datetime explicitly shifted to IST (UTC+5:30)
-    regardless of the cloud server's local time zone container."""
+    """Fetches the exact authoritative time via an HTTP header from Cloudflare/Google
+    to completely eliminate cloud container clock drift on Render/AWS."""
+    try:
+        r = req.head("https://cloudflare.com", timeout=3)
+        gmt_str = r.headers.get("Date")
+        if gmt_str:
+            utc_dt = datetime.datetime.strptime(
+                gmt_str, "%a, %d %b %Y %H:%M:%S %Z"
+            ).replace(tzinfo=datetime.timezone.utc)
+            ist_offset = datetime.timedelta(hours=5, minutes=30)
+            return utc_dt + ist_offset
+    except Exception:
+        pass
+
+    # Fallback if offline/blocked: standard offset calculation
     utc_now = datetime.datetime.now(datetime.timezone.utc)
-    ist_offset = datetime.timedelta(hours=5, minutes=30)
-    return utc_now + ist_offset
+    return utc_now + datetime.timedelta(hours=5, minutes=30)
 
 
 # ==========================================
@@ -360,7 +372,14 @@ def complete_login():
             timeout=20,
         )
     except Exception as e:
+        print(f"[DEBUG EXCEPTION] Connection to LoginServlet failed: {str(e)}")
         return jsonify({"ok": False, "error": str(e)}), 502
+
+    # --- ADDED DEBUG LOGS FOR RENDER DIAGNOSTICS ---
+    print(f"[DEBUG LOGIN] Status Code: {res.status_code}")
+    print(f"[DEBUG LOGIN] Response Headers: {dict(res.headers)}")
+    print(f"[DEBUG LOGIN] Response Snippet: {res.text[:500]}")
+    # -----------------------------------------------
 
     if (
         res.status_code == 302
@@ -385,7 +404,9 @@ def complete_login():
             {"ok": False, "error": "Invalid Student Portal Credentials."}
         ), 401
 
-    return jsonify({"ok": False, "error": "Server rejected payload."}), 401
+    return jsonify(
+        {"ok": False, "error": f"Server rejected payload. Status: {res.status_code}"}
+    ), 401
 
 
 # ==========================================
