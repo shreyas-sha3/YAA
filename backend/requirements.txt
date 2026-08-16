@@ -3,4 +3,5 @@ flask-cors
 requests
 beautifulsoup4
 gunicorn
-dotenv
+python-dotenv
+itsdangerous
