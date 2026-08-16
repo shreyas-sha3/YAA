@@ -27,12 +27,17 @@ app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
 serializer = URLSafeSerializer(app.secret_key)
 CORS(
     app,
-    resources={r"/api/*": {"origins": "*"}},
     supports_credentials=False,
+    origins=[
+        "https://yetanotheracademia.web.app",
+        "http://localhost:5000",
+        "http://127.0.0.1:5000",
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+    ],
     allow_headers=["Content-Type", "X-Session-Token"],
     methods=["GET", "POST", "OPTIONS"],
 )
-
 # ==========================================
 # CONFIGURATION & CONSTANTS
 # ==========================================
@@ -40,6 +45,17 @@ STUDENT_PORTAL_URL = "https://sp.srmist.edu.in/srmiststudentportal"
 ACADEMIA_BASE_URL = "https://academia.srmist.edu.in"
 ACADEMIA_PORTAL_URL = f"{ACADEMIA_BASE_URL}/srm_university/academia-academic-services/"
 USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+
+
+# ==========================================
+# TIME HELPER (Fixes Singapore / Cloud Hosting timezone issues)
+# ==========================================
+def get_ist_now():
+    """Returns current datetime explicitly shifted to IST (UTC+5:30)
+    regardless of the cloud server's local time zone container."""
+    utc_now = datetime.datetime.now(datetime.timezone.utc)
+    ist_offset = datetime.timedelta(hours=5, minutes=30)
+    return utc_now + ist_offset
 
 
 # ==========================================
@@ -144,7 +160,7 @@ def authenticate_academia_portal(s, email, password):
         lookup_url,
         data={
             "mode": "primary",
-            "cli_time": str(int(time.time() * 1000)),
+            "cli_time": str(int(get_ist_now().timestamp() * 1000)),
             "orgtype": "40",
         },
         headers=zoho_headers,
@@ -162,7 +178,7 @@ def authenticate_academia_portal(s, email, password):
         auth_url,
         params={
             "digest": digest,
-            "cli_time": str(int(time.time() * 1000)),
+            "cli_time": str(int(get_ist_now().timestamp() * 1000)),
             "orgtype": "40",
         },
         data=pw_payload,
@@ -181,7 +197,7 @@ def authenticate_academia_portal(s, email, password):
             auth_url,
             params={
                 "digest": digest,
-                "cli_time": str(int(time.time() * 1000)),
+                "cli_time": str(int(get_ist_now().timestamp() * 1000)),
                 "orgtype": "40",
             },
             data=pw_payload,
@@ -264,7 +280,7 @@ def init_login():
             )
             captcha_data_uri = f"data:image/png;base64,{base64.b64encode(img_res.content).decode('utf-8')}"
 
-        hi.update({"sec_config": sc, "init_time": time.time()})
+        hi.update({"sec_config": sc, "init_time": get_ist_now().timestamp()})
         return jsonify(
             {
                 "ok": True,
@@ -290,7 +306,10 @@ def complete_login():
 
     try:
         hi = dict(serializer.loads(tk).get("extra", {}))
-        sc, it = hi.pop("sec_config", {}), hi.pop("init_time", time.time() - 15)
+        sc, it = (
+            hi.pop("sec_config", {}),
+            hi.pop("init_time", get_ist_now().timestamp() - 15),
+        )
     except Exception:
         return jsonify({"ok": False, "error": "Expired token"}), 401
 
@@ -313,9 +332,13 @@ def complete_login():
     }
     p.update({k: v for k, v in hi.items() if k.startswith("ph_")})
 
-    now, top = int(time.time() * 1000), int((time.time() - it) * 1000)
+    now_ms = int(get_ist_now().timestamp() * 1000)
+    top_ms = int((get_ist_now().timestamp() - it) * 1000)
     tm = generate_telemetry(
-        len(un), len(sp_pw), now, top if top > 5000 else random.randint(7500, 15000)
+        len(un),
+        len(sp_pw),
+        now_ms,
+        top_ms if top_ms > 5000 else random.randint(7500, 15000),
     )
     p["telemetryPayload"] = base64.b64encode(
         json.dumps(tm, separators=(",", ":")).encode()
@@ -472,12 +495,12 @@ def scrape_academia_timetable_and_calendar(s):
                 )
         active_indices = [i for i, v in enumerate(has_class) if v]
 
-    # Scrape Academic Planner/Calendar from Academia Zoho Portal
+    # Scrape Academic Planner/Calendar from Academia Zoho Portal (using IST now)
     soup_cal = fetch_academia_zoho_html(
         s, f"{ACADEMIA_PORTAL_URL}page/Academic_Planner_2026_27_ODD"
     )
     if soup_cal and soup_cal.find("table"):
-        now = datetime.datetime.now()
+        now = get_ist_now()
         month_range, month_nums = range(0, 6), [7, 8, 9, 10, 11, 12]
 
         rows = soup_cal.find("table").find_all("tr")
