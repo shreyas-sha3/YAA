@@ -2,15 +2,30 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+        />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="description" content="Yet Another lightweight, fast frontend to the SRM Academia portal." />
+        <meta
+            name="apple-mobile-web-app-status-bar-style"
+            content="black-translucent"
+        />
+        <meta
+            name="description"
+            content="Yet Another lightweight, fast frontend to the SRM Academia portal."
+        />
         <title>YetAnotherAcademia</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%25%22 height=%22100%25%22 rx=%2220%22 fill=%22%23000000%22/><text x=%2250%25%22 y=%2255%25%22 dominant-baseline=%22central%22 text-anchor=%22middle%22 font-family=%22Syne, sans-serif%22 font-weight=%22800%22 font-size=%2270%22 fill=%22%23c9a84c%22>Y</text></svg>" />
+        <link
+            rel="icon"
+            href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%25%22 height=%22100%25%22 rx=%2220%22 fill=%22%23000000%22/><text x=%2250%25%22 y=%2255%25%22 dominant-baseline=%22central%22 text-anchor=%22middle%22 font-family=%22Syne, sans-serif%22 font-weight=%22800%22 font-size=%2270%22 fill=%22%23c9a84c%22>Y</text></svg>"
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+            rel="stylesheet"
+        />
         <style>
             /* ── DESIGN TOKENS ─────────────────────────────────────── */
             :root {
@@ -27,14 +42,14 @@
                 --gold: #c9a84c;
                 --gold2: #7a5f2a;
                 --danger: #ff4444;
-                --danger-dim: rgba(255,68,68,0.1);
+                --danger-dim: rgba(255, 68, 68, 0.1);
                 --ok: #44cc77;
-                --ok-dim: rgba(68,204,119,0.08);
+                --ok-dim: rgba(68, 204, 119, 0.08);
                 --warn: #ffaa00;
-                --warn-dim: rgba(255,170,0,0.1);
+                --warn-dim: rgba(255, 170, 0, 0.1);
                 --lab: #2ecc71;
-                --lab-dim: rgba(46,204,113,0.1);
-                --now-dim: rgba(201,168,76,0.1);
+                --lab-dim: rgba(46, 204, 113, 0.1);
+                --now-dim: rgba(201, 168, 76, 0.1);
                 --r: 10px;
                 --r2: 7px;
                 --safe-top: env(safe-area-inset-top, 0px);
@@ -42,193 +57,1159 @@
                 --font-body: "Syne", sans-serif;
                 --font-mono: "DM Mono", monospace;
             }
-            * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-            html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--font-body); }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            html,
+            body {
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                background: var(--bg);
+                color: var(--text);
+                font-family: var(--font-body);
+            }
 
             /* ── LOGIN ─────────────────────────────────────────────── */
             #login-screen {
-                position: fixed; inset: 0; background: var(--bg);
-                display: flex; flex-direction: column; align-items: center; justify-content: center;
-                z-index: 100; padding: 2rem 2rem calc(var(--safe-bot) + 2rem); gap: 1.25rem;
-                transition: opacity 0.4s ease, transform 0.4s ease;
+                position: fixed;
+                inset: 0;
+                background: var(--bg);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                z-index: 100;
+                padding: 2rem 2rem calc(var(--safe-bot) + 2rem);
+                gap: 1.25rem;
+                transition:
+                    opacity 0.4s ease,
+                    transform 0.4s ease;
             }
-            #login-screen.hidden { opacity: 0; pointer-events: none; transform: translateY(-24px); }
-            .login-logo { font-family: var(--font-body); font-size: 3rem; font-weight: 800; letter-spacing: -0.05em; color: var(--gold); line-height: 1; text-align: center; }
-            .login-subtitle { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text3); letter-spacing: 0.14em; text-align: center; text-transform: uppercase; }
-            .login-form { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 0.65rem; margin-top: 0.5rem; }
-            .input-wrap { position: relative; }
+
+            #login-screen.hidden {
+                opacity: 0;
+                pointer-events: none;
+                transform: translateY(-24px);
+            }
+
+            .login-logo {
+                font-family: var(--font-body);
+                font-size: 3rem;
+                font-weight: 800;
+                letter-spacing: -0.05em;
+                color: var(--gold);
+                line-height: 1;
+                text-align: center;
+            }
+
+            .login-subtitle {
+                font-family: var(--font-mono);
+                font-size: 0.65rem;
+                color: var(--text3);
+                letter-spacing: 0.14em;
+                text-align: center;
+                text-transform: uppercase;
+            }
+
+            .login-form {
+                width: 100%;
+                max-width: 340px;
+                display: flex;
+                flex-direction: column;
+                gap: 0.65rem;
+                margin-top: 0.5rem;
+            }
+
+            .input-wrap {
+                position: relative;
+            }
+
             .input-wrap input {
-                width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--r2);
-                padding: 0.85rem 1rem 0.85rem 2.75rem; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text);
-                outline: none; transition: border-color 0.2s;
+                width: 100%;
+                background: var(--surface2);
+                border: 1px solid var(--border2);
+                border-radius: var(--r2);
+                padding: 0.85rem 1rem 0.85rem 2.75rem;
+                font-family: var(--font-mono);
+                font-size: 0.8rem;
+                color: var(--text);
+                outline: none;
+                transition: border-color 0.2s;
             }
-            .input-wrap input:focus { border-color: var(--gold2); }
-            .input-wrap input::placeholder { color: var(--text3); }
-            .input-icon { position: absolute; left: 0.95rem; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 0.8rem; pointer-events: none; }
-            .view-pw { position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 0.4rem; cursor: pointer; color: var(--text3); display: flex; align-items: center; transition: color 0.2s; }
-            .view-pw:hover, .view-pw:active { color: var(--gold); }
-            .view-pw svg { fill: none; stroke: currentColor; }
-            .login-btn { background: var(--gold); color: #000; border: none; border-radius: var(--r2); padding: 0.9rem; font-family: var(--font-body); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; cursor: pointer; transition: opacity 0.2s, transform 0.1s; margin-top: 0.25rem; }
-            .login-btn:active { transform: scale(0.98); opacity: 0.85; }
-            .login-error { color: var(--danger); font-family: var(--font-mono); font-size: 0.7rem; text-align: center; min-height: 1rem; letter-spacing: 0.02em; }
-            .login-suffix { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text3); position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); pointer-events: none; }
-            .github-link { color: var(--text3); transition: all 0.2s; opacity: 0.5; display: flex; align-items: center; gap: 0.4rem; text-decoration: none; font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.06em; }
-            .github-link:hover { color: var(--gold); opacity: 1; transform: translateY(-1px); }
-            .github-link svg { fill: currentColor; }
+
+            .input-wrap input:focus {
+                border-color: var(--gold2);
+            }
+
+            .input-wrap input::placeholder {
+                color: var(--text3);
+            }
+
+            .input-icon {
+                position: absolute;
+                left: 0.95rem;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--text3);
+                font-size: 0.8rem;
+                pointer-events: none;
+            }
+
+            .view-pw {
+                position: absolute;
+                right: 0.75rem;
+                top: 50%;
+                transform: translateY(-50%);
+                background: none;
+                border: none;
+                padding: 0.4rem;
+                cursor: pointer;
+                color: var(--text3);
+                display: flex;
+                align-items: center;
+                transition: color 0.2s;
+            }
+
+            .view-pw:hover,
+            .view-pw:active {
+                color: var(--gold);
+            }
+
+            .view-pw svg {
+                fill: none;
+                stroke: currentColor;
+            }
+
+            .login-btn {
+                background: var(--gold);
+                color: #000;
+                border: none;
+                border-radius: var(--r2);
+                padding: 0.9rem;
+                font-family: var(--font-body);
+                font-size: 0.8rem;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                cursor: pointer;
+                transition:
+                    opacity 0.2s,
+                    transform 0.1s;
+                margin-top: 0.25rem;
+            }
+
+            .login-btn:active {
+                transform: scale(0.98);
+                opacity: 0.85;
+            }
+
+            .login-error {
+                color: var(--danger);
+                font-family: var(--font-mono);
+                font-size: 0.7rem;
+                text-align: center;
+                min-height: 1rem;
+                letter-spacing: 0.02em;
+            }
+
+            .login-suffix {
+                font-family: var(--font-mono);
+                font-size: 0.65rem;
+                color: var(--text3);
+                position: absolute;
+                right: 0.75rem;
+                top: 50%;
+                transform: translateY(-50%);
+                pointer-events: none;
+            }
+
+            .github-link {
+                color: var(--text3);
+                transition: all 0.2s;
+                opacity: 0.5;
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+                text-decoration: none;
+                font-family: var(--font-mono);
+                font-size: 0.6rem;
+                letter-spacing: 0.06em;
+            }
+
+            .github-link:hover {
+                color: var(--gold);
+                opacity: 1;
+                transform: translateY(-1px);
+            }
+
+            .github-link svg {
+                fill: currentColor;
+            }
 
             /* ── APP SHELL ─────────────────────────────────────────── */
-            #app { position: fixed; inset: 0; display: flex; flex-direction: column; opacity: 0; pointer-events: none; }
-            #app.visible { opacity: 1; pointer-events: all; }
+            #app {
+                position: fixed;
+                inset: 0;
+                display: flex;
+                flex-direction: column;
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            #app.visible {
+                opacity: 1;
+                pointer-events: all;
+            }
 
             /* ── HEADER ────────────────────────────────────────────── */
-            .app-header { padding: calc(var(--safe-top) + 0.7rem) 1.25rem 0.4rem; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; position: relative; z-index: 10; }
-            .header-name { font-family: var(--font-body); font-size: 0.8rem; font-weight: 600; color: var(--text2); letter-spacing: 0.02em; max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
-            .header-right { display: flex; align-items: center; gap: 0.5rem; }
-            .github-link-header { color: var(--text3); opacity: 0.4; display: flex; align-items: center; text-decoration: none; transition: all 0.2s; }
-            .github-link-header:hover { color: var(--gold); opacity: 0.8; }
-            .github-link-header svg { fill: currentColor; }
-            .header-badge { font-family: var(--font-mono); font-size: 0.6rem; background: var(--surface2); border: 1px solid var(--border2); padding: 0.2rem 0.55rem; border-radius: 20px; color: var(--text2); letter-spacing: 0.06em; }
-            .header-badge.has-day { color: var(--gold); border-color: var(--gold2); }
+            .app-header {
+                padding: calc(var(--safe-top) + 0.7rem) 1.25rem 0.4rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-shrink: 0;
+                position: relative;
+                z-index: 10;
+            }
+
+            .header-name {
+                font-family: var(--font-body);
+                font-size: 0.8rem;
+                font-weight: 600;
+                color: var(--text2);
+                letter-spacing: 0.02em;
+                max-width: 55%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                cursor: pointer;
+            }
+
+            .header-right {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .github-link-header {
+                color: var(--text3);
+                opacity: 0.4;
+                display: flex;
+                align-items: center;
+                text-decoration: none;
+                transition: all 0.2s;
+            }
+
+            .github-link-header:hover {
+                color: var(--gold);
+                opacity: 0.8;
+            }
+
+            .github-link-header svg {
+                fill: currentColor;
+            }
+
+            .header-badge {
+                font-family: var(--font-mono);
+                font-size: 0.6rem;
+                background: var(--surface2);
+                border: 1px solid var(--border2);
+                padding: 0.2rem 0.55rem;
+                border-radius: 20px;
+                color: var(--text2);
+                letter-spacing: 0.06em;
+            }
+
+            .header-badge.has-day {
+                color: var(--gold);
+                border-color: var(--gold2);
+            }
 
             /* ── DOT NAV ───────────────────────────────────────────── */
-            .dot-nav { display: flex; gap: 5px; align-items: center; justify-content: center; padding: 0.2rem 0 0.4rem; flex-shrink: 0; }
-            .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--border2); transition: all 0.3s cubic-bezier(0.4,0,0.2,1); cursor: pointer; }
-            .dot.active { background: var(--gold); width: 16px; border-radius: 3px; }
+            .dot-nav {
+                display: flex;
+                gap: 5px;
+                align-items: center;
+                justify-content: center;
+                padding: 0.2rem 0 0.4rem;
+                flex-shrink: 0;
+            }
+
+            .dot {
+                width: 4px;
+                height: 4px;
+                border-radius: 50%;
+                background: var(--border2);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                cursor: pointer;
+            }
+
+            .dot.active {
+                background: var(--gold);
+                width: 16px;
+                border-radius: 3px;
+            }
 
             /* ── SWIPE CONTAINER ───────────────────────────────────── */
-            .swipe-wrap { flex: 1; overflow: hidden; position: relative; min-height: 0; }
-            .screens-track { display: flex; height: 100%; transition: transform 0.45s cubic-bezier(0.4,0,0.2,1); will-change: transform; }
+            .swipe-wrap {
+                flex: 1;
+                overflow: hidden;
+                position: relative;
+                min-height: 0;
+            }
+
+            .screens-track {
+                display: flex;
+                height: 100%;
+                transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+                will-change: transform;
+            }
 
             /* ── SCREEN ────────────────────────────────────────────── */
-            .screen { min-width: 100%; height: 100%; padding: 0.1rem 1.25rem calc(var(--safe-bot) + 0.75rem); display: flex; flex-direction: column; gap: 0.5rem; overflow: hidden; }
-            .screen-label { font-family: var(--font-mono); font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text3); flex-shrink: 0; }
-            .screen-title { font-family: var(--font-body); font-size: 1.3rem; font-weight: 800; letter-spacing: -0.03em; flex-shrink: 0; line-height: 1; color: var(--text); }
+            .screen {
+                min-width: 100%;
+                height: 100%;
+                padding: 0.1rem 1.25rem calc(var(--safe-bot) + 0.75rem);
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+                overflow: hidden;
+            }
+
+            .screen-label {
+                font-family: var(--font-mono);
+                font-size: 0.55rem;
+                letter-spacing: 0.2em;
+                text-transform: uppercase;
+                color: var(--text3);
+                flex-shrink: 0;
+            }
+
+            .screen-title {
+                font-family: var(--font-body);
+                font-size: 1.3rem;
+                font-weight: 800;
+                letter-spacing: -0.03em;
+                flex-shrink: 0;
+                line-height: 1;
+                color: var(--text);
+            }
 
             /* ── INNER SCROLL ──────────────────────────────────────── */
-            .inner-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.4rem; scrollbar-width: none; min-height: 0; -webkit-overflow-scrolling: touch; padding-bottom: 0.5rem; }
-            .inner-scroll::-webkit-scrollbar { display: none; }
+            .inner-scroll {
+                flex: 1;
+                overflow-y: auto;
+                display: flex;
+                flex-direction: column;
+                gap: 0.4rem;
+                scrollbar-width: none;
+                min-height: 0;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 0.5rem;
+            }
+
+            .inner-scroll::-webkit-scrollbar {
+                display: none;
+            }
 
             /* ── TIMETABLE ─────────────────────────────────────────── */
-            .tt-list { flex: 1; display: flex; flex-direction: column; gap: 0.45rem; overflow-y: auto; overflow-x: hidden; min-height: 0; scrollbar-width: none; padding-bottom: 0.5rem; }
-            .tt-list::-webkit-scrollbar { display: none; }
-            .tt-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0.9rem; border-radius: var(--r); border: 1px solid var(--border); background: var(--surface); position: relative; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); flex-shrink: 0; }
-            .tt-item.is-now { border-color: var(--gold2); background: var(--now-dim); }
-            .tt-item.is-lab { border-color: rgba(46,204,113,0.3); background: var(--lab-dim); }
-            .tt-item.is-free { border-color: transparent; background: transparent; }
-            .tt-item.is-done { opacity: 0.45; }
-            .tt-time { font-family: var(--font-mono); font-size: 0.6rem; color: var(--text2); min-width: 66px; line-height: 1.4; flex-shrink: 0; white-space: pre; }
-            .tt-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--border2); flex-shrink: 0; transition: background 0.2s; }
-            .tt-item.is-now .tt-dot { background: var(--gold); box-shadow: 0 0 6px var(--gold); }
-            .tt-item.is-lab .tt-dot { background: var(--lab); }
-            .tt-item.is-free .tt-dot { background: var(--text3); }
-            .tt-info { flex: 1; min-width: 0; }
-            .tt-title { font-family: var(--font-body); font-size: 0.82rem; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
-            .tt-item.is-free .tt-title { color: var(--text3); font-weight: 400; font-family: var(--font-mono); font-size: 0.68rem; }
-            .tt-room { font-family: var(--font-mono); font-size: 0.6rem; color: var(--text2); margin-top: 0.1rem; }
-            .lab-pill { font-family: var(--font-mono); font-size: 0.5rem; font-weight: 500; background: rgba(46,204,113,0.12); color: var(--lab); border: 1px solid rgba(46,204,113,0.25); padding: 0.1rem 0.4rem; border-radius: 20px; letter-spacing: 0.06em; flex-shrink: 0; }
-            .now-indicator { font-family: var(--font-mono); font-size: 0.5rem; color: var(--gold); letter-spacing: 0.1em; flex-shrink: 0; }
-            .progress-bar { position: absolute; bottom: 0; left: 0; height: 2px; background: var(--gold); border-radius: 0 1px 1px 0; transition: width 1s linear; }
+            .tt-list {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 0.45rem;
+                overflow-y: auto;
+                overflow-x: hidden;
+                min-height: 0;
+                scrollbar-width: none;
+                padding-bottom: 0.5rem;
+            }
+
+            .tt-list::-webkit-scrollbar {
+                display: none;
+            }
+
+            .tt-item {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.75rem 0.9rem;
+                border-radius: var(--r);
+                border: 1px solid var(--border);
+                background: var(--surface);
+                position: relative;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                flex-shrink: 0;
+            }
+
+            .tt-item.is-now {
+                border-color: var(--gold2);
+                background: var(--now-dim);
+            }
+
+            .tt-item.is-lab {
+                border-color: rgba(46, 204, 113, 0.3);
+                background: var(--lab-dim);
+            }
+
+            .tt-item.is-free {
+                border-color: transparent;
+                background: transparent;
+            }
+
+            .tt-item.is-done {
+                opacity: 0.45;
+            }
+
+            .tt-time {
+                font-family: var(--font-mono);
+                font-size: 0.6rem;
+                color: var(--text2);
+                min-width: 66px;
+                line-height: 1.4;
+                flex-shrink: 0;
+                white-space: pre;
+            }
+
+            .tt-dot {
+                width: 5px;
+                height: 5px;
+                border-radius: 50%;
+                background: var(--border2);
+                flex-shrink: 0;
+                transition: background 0.2s;
+            }
+
+            .tt-item.is-now .tt-dot {
+                background: var(--gold);
+                box-shadow: 0 0 6px var(--gold);
+            }
+
+            .tt-item.is-lab .tt-dot {
+                background: var(--lab);
+            }
+
+            .tt-item.is-free .tt-dot {
+                background: var(--text3);
+            }
+
+            .tt-info {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .tt-title {
+                font-family: var(--font-body);
+                font-size: 0.82rem;
+                font-weight: 700;
+                letter-spacing: -0.01em;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                color: var(--text);
+            }
+
+            .tt-item.is-free .tt-title {
+                color: var(--text3);
+                font-weight: 400;
+                font-family: var(--font-mono);
+                font-size: 0.68rem;
+            }
+
+            .tt-room {
+                font-family: var(--font-mono);
+                font-size: 0.6rem;
+                color: var(--text2);
+                margin-top: 0.1rem;
+            }
+
+            .lab-pill {
+                font-family: var(--font-mono);
+                font-size: 0.5rem;
+                font-weight: 500;
+                background: rgba(46, 204, 113, 0.12);
+                color: var(--lab);
+                border: 1px solid rgba(46, 204, 113, 0.25);
+                padding: 0.1rem 0.4rem;
+                border-radius: 20px;
+                letter-spacing: 0.06em;
+                flex-shrink: 0;
+            }
+
+            .now-indicator {
+                font-family: var(--font-mono);
+                font-size: 0.5rem;
+                color: var(--gold);
+                letter-spacing: 0.1em;
+                flex-shrink: 0;
+            }
+
+            .progress-bar {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                height: 2px;
+                background: var(--gold);
+                border-radius: 0 1px 1px 0;
+                transition: width 1s linear;
+            }
 
             /* ── ATTENDANCE ────────────────────────────────────────── */
-            .att-item { padding: 0.65rem 0.85rem; border-radius: var(--r); border: 1px solid var(--border2); background: var(--surface); display: flex; align-items: center; gap: 0.7rem; flex-shrink: 0; }
-            .att-item.is-low { border-color: rgba(255,68,68,0.25); background: linear-gradient(90deg, var(--danger-dim) 0%, var(--surface) 100%); }
-            .att-pct-ring { flex-shrink: 0; width: 30px; height: 30px; position: relative; }
-            .att-pct-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
-            .ring-bg { stroke: var(--border2); fill: none; stroke-width: 3; }
-            .ring-fill { fill: none; stroke-width: 3; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
-            .att-pct-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.55rem; font-weight: 600; }
-            .att-info { flex: 1; min-width: 0; }
-            .att-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
-            .att-title { font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: -0.01em; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
-            .att-count { font-family: var(--font-mono); font-size: 0.6rem; color: var(--text2); white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
-            .att-margin { font-family: var(--font-mono); font-size: 0.58rem; font-weight: 400; margin-top: 0.15rem; letter-spacing: 0.02em; color: var(--text2); }
-            .att-margin .att-num { font-weight: 700; font-size: 0.72rem; }
-            .att-margin.ok .att-num { color: #55ee99; }
-            .att-margin.low .att-num { color: #ff5555; }
-            .att-sep { font-family: var(--font-mono); font-size: 0.55rem; color: var(--text3); letter-spacing: 0.18em; text-align: center; text-transform: uppercase; margin: 0.15rem 0; flex-shrink: 0; }
+            .att-item {
+                padding: 0.65rem 0.85rem;
+                border-radius: var(--r);
+                border: 1px solid var(--border2);
+                background: var(--surface);
+                display: flex;
+                align-items: center;
+                gap: 0.7rem;
+                flex-shrink: 0;
+            }
+
+            .att-item.is-low {
+                border-color: rgba(255, 68, 68, 0.25);
+                background: linear-gradient(
+                    90deg,
+                    var(--danger-dim) 0%,
+                    var(--surface) 100%
+                );
+            }
+
+            .att-pct-ring {
+                flex-shrink: 0;
+                width: 30px;
+                height: 30px;
+                position: relative;
+            }
+
+            .att-pct-ring svg {
+                position: absolute;
+                inset: 0;
+                transform: rotate(-90deg);
+            }
+
+            .ring-bg {
+                stroke: var(--border2);
+                fill: none;
+                stroke-width: 3;
+            }
+
+            .ring-fill {
+                fill: none;
+                stroke-width: 3;
+                stroke-linecap: round;
+                transition: stroke-dashoffset 0.6s ease;
+            }
+
+            .att-pct-text {
+                position: absolute;
+                inset: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-family: var(--font-mono);
+                font-size: 0.55rem;
+                font-weight: 600;
+            }
+
+            .att-info {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .att-top {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 6px;
+            }
+
+            .att-title {
+                font-family: var(--font-body);
+                font-size: 0.75rem;
+                font-weight: 700;
+                letter-spacing: -0.01em;
+                line-height: 1.15;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                color: var(--text);
+            }
+
+            .att-count {
+                font-family: var(--font-mono);
+                font-size: 0.6rem;
+                color: var(--text2);
+                white-space: nowrap;
+                flex-shrink: 0;
+                margin-top: 1px;
+            }
+
+            .att-margin {
+                font-family: var(--font-mono);
+                font-size: 0.58rem;
+                font-weight: 400;
+                margin-top: 0.15rem;
+                letter-spacing: 0.02em;
+                color: var(--text2);
+            }
+
+            .att-margin .att-num {
+                font-weight: 700;
+                font-size: 0.72rem;
+            }
+
+            .att-margin.ok .att-num {
+                color: #55ee99;
+            }
+
+            .att-margin.low .att-num {
+                color: #ff5555;
+            }
+
+            .att-sep {
+                font-family: var(--font-mono);
+                font-size: 0.55rem;
+                color: var(--text3);
+                letter-spacing: 0.18em;
+                text-align: center;
+                text-transform: uppercase;
+                margin: 0.15rem 0;
+                flex-shrink: 0;
+            }
 
             /* ── OD/BUNK CONTROLS ──────────────────────────────────── */
-            .od-controls { display: flex; gap: 0.5rem; flex-shrink: 0; }
-            .od-btn { flex: 1; height: 40px; padding: 0 0.4rem; border-radius: var(--r); font-family: var(--font-body); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em; border: 1px solid var(--border2); background: var(--surface2); color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; text-align: center; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); }
-            .od-btn:active { transform: scale(0.96); }
-            .od-btn.active-od { border-color: rgba(46,204,113,0.35); color: var(--lab); background: var(--lab-dim); }
-            .od-btn.active-bunk { border-color: rgba(255,68,68,0.35); color: var(--danger); background: var(--danger-dim); }
-            .od-btn.reset { flex: 0.55; border-color: var(--border); color: var(--text3); background: var(--surface); position: relative; }
-            .od-btn.reset.has-active::after { content: ""; position: absolute; top: 7px; right: 7px; width: 5px; height: 5px; background: var(--warn); border-radius: 50%; box-shadow: 0 0 4px var(--warn); }
+            .od-controls {
+                display: flex;
+                gap: 0.5rem;
+                flex-shrink: 0;
+            }
+
+            .od-btn {
+                flex: 1;
+                height: 40px;
+                padding: 0 0.4rem;
+                border-radius: var(--r);
+                font-family: var(--font-body);
+                font-size: 0.75rem;
+                font-weight: 600;
+                letter-spacing: 0.02em;
+                border: 1px solid var(--border2);
+                background: var(--surface2);
+                color: var(--text2);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .od-btn:active {
+                transform: scale(0.96);
+            }
+
+            .od-btn.active-od {
+                border-color: rgba(46, 204, 113, 0.35);
+                color: var(--lab);
+                background: var(--lab-dim);
+            }
+
+            .od-btn.active-bunk {
+                border-color: rgba(255, 68, 68, 0.35);
+                color: var(--danger);
+                background: var(--danger-dim);
+            }
+
+            .od-btn.reset {
+                flex: 0.55;
+                border-color: var(--border);
+                color: var(--text3);
+                background: var(--surface);
+                position: relative;
+            }
+
+            .od-btn.reset.has-active::after {
+                content: "";
+                position: absolute;
+                top: 7px;
+                right: 7px;
+                width: 5px;
+                height: 5px;
+                background: var(--warn);
+                border-radius: 50%;
+                box-shadow: 0 0 4px var(--warn);
+            }
 
             /* ── MARKS ─────────────────────────────────────────────── */
-            .marks-item { padding: 0.75rem 0.9rem; border-radius: var(--r); border: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
-            .marks-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem; }
-            .marks-course { font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 68%; color: var(--text); }
-            .marks-total { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; color: var(--accent); }
-            .marks-components { display: flex; flex-wrap: wrap; gap: 0.25rem; }
-            .comp-chip { font-family: var(--font-mono); font-size: 0.6rem; font-weight: 500; padding: 0.2rem 0.5rem; border-radius: 20px; border: 1px solid var(--border2); background: var(--surface3); color: var(--text2); letter-spacing: 0.02em; }
-            .comp-chip.low { border-color: rgba(255,68,68,0.4); color: #ff6666; background: var(--danger-dim); }
+            .marks-item {
+                padding: 0.75rem 0.9rem;
+                border-radius: var(--r);
+                border: 1px solid var(--border);
+                background: var(--surface);
+                flex-shrink: 0;
+            }
+
+            .marks-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 0.4rem;
+            }
+
+            .marks-course {
+                font-family: var(--font-body);
+                font-size: 0.75rem;
+                font-weight: 700;
+                letter-spacing: -0.01em;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 68%;
+                color: var(--text);
+            }
+
+            .marks-total {
+                font-family: var(--font-mono);
+                font-size: 0.75rem;
+                font-weight: 600;
+                color: var(--accent);
+            }
+
+            .marks-components {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.25rem;
+            }
+
+            .comp-chip {
+                font-family: var(--font-mono);
+                font-size: 0.6rem;
+                font-weight: 500;
+                padding: 0.2rem 0.5rem;
+                border-radius: 20px;
+                border: 1px solid var(--border2);
+                background: var(--surface3);
+                color: var(--text2);
+                letter-spacing: 0.02em;
+            }
+
+            .comp-chip.low {
+                border-color: rgba(255, 68, 68, 0.4);
+                color: #ff6666;
+                background: var(--danger-dim);
+            }
 
             /* ── CALENDAR ──────────────────────────────────────────── */
-            .cal-header { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-            .cal-month { font-family: var(--font-body); font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; color: var(--text); }
-            .cal-nav { display: flex; gap: 0.4rem; }
-            .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; flex-shrink: 0; }
-            .cal-dow { font-family: var(--font-mono); font-size: 0.55rem; color: var(--text3); text-align: center; padding: 0.2rem 0; }
-            .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; position: relative; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); border: 1px solid transparent; background: var(--surface2); }
-            .cal-day:active { transform: scale(0.92); }
-            .cal-day.today { border-color: var(--gold2); background: var(--now-dim); }
-            .cal-day.today .d-num { color: var(--gold); font-weight: 800; }
-            .cal-day.holiday { opacity: 0.3; background: transparent; }
-            .cal-day.selected-od { background: var(--lab-dim); border-color: rgba(46,204,113,0.5); }
-            .cal-day.selected-bunk { background: var(--danger-dim); border-color: rgba(255,68,68,0.5); }
-            .cal-day.empty { pointer-events: none; opacity: 0; }
-            .d-num { font-family: var(--font-body); font-size: 0.95rem; font-weight: 700; z-index: 1; }
-            .d-order { font-family: var(--font-mono); font-size: 0.5rem; position: absolute; bottom: 4px; color: var(--text2); font-weight: 500; }
-            .cal-mode-label { font-family: var(--font-mono); font-size: 0.6rem; color: var(--text2); text-align: center; padding: 0.1rem 0; flex-shrink: 0; letter-spacing: 0.04em; }
-            .cal-mode-label span { color: var(--gold); }
-            .cal-nav-btn { flex: 1; height: 40px; padding: 0 0.5rem; border-radius: var(--r); font-family: var(--font-body); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em; border: 1px solid var(--border2); background: var(--surface2); color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-            .cal-nav-btn:active { transform: scale(0.96); }
-            .cal-confirm { display: flex; gap: 0.5rem; flex-shrink: 0; }
-            .confirm-btn { flex: 1; padding: 0.6rem; border-radius: var(--r2); font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; border: none; cursor: pointer; transition: all 0.2s; }
-            .confirm-btn:active { transform: scale(0.97); }
-            .confirm-btn.apply { background: var(--gold); color: #000; }
-            .confirm-btn.cancel { background: var(--surface2); color: var(--text2); border: 1px solid var(--border2); }
+            .cal-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-shrink: 0;
+            }
+
+            .cal-month {
+                font-family: var(--font-body);
+                font-size: 1.05rem;
+                font-weight: 700;
+                letter-spacing: -0.01em;
+                color: var(--text);
+            }
+
+            .cal-nav {
+                display: flex;
+                gap: 0.4rem;
+            }
+
+            .cal-grid {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                gap: 5px;
+                flex-shrink: 0;
+            }
+
+            .cal-dow {
+                font-family: var(--font-mono);
+                font-size: 0.55rem;
+                color: var(--text3);
+                text-align: center;
+                padding: 0.2rem 0;
+            }
+
+            .cal-day {
+                aspect-ratio: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                border-radius: 8px;
+                cursor: pointer;
+                position: relative;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                border: 1px solid transparent;
+                background: var(--surface2);
+            }
+
+            .cal-day:active {
+                transform: scale(0.92);
+            }
+
+            .cal-day.today {
+                border-color: var(--gold2);
+                background: var(--now-dim);
+            }
+
+            .cal-day.today .d-num {
+                color: var(--gold);
+                font-weight: 800;
+            }
+
+            .cal-day.holiday {
+                opacity: 0.3;
+                background: transparent;
+            }
+
+            .cal-day.selected-od {
+                background: var(--lab-dim);
+                border-color: rgba(46, 204, 113, 0.5);
+            }
+
+            .cal-day.selected-bunk {
+                background: var(--danger-dim);
+                border-color: rgba(255, 68, 68, 0.5);
+            }
+
+            .cal-day.empty {
+                pointer-events: none;
+                opacity: 0;
+            }
+
+            .d-num {
+                font-family: var(--font-body);
+                font-size: 0.95rem;
+                font-weight: 700;
+                z-index: 1;
+            }
+
+            .d-order {
+                font-family: var(--font-mono);
+                font-size: 0.5rem;
+                position: absolute;
+                bottom: 4px;
+                color: var(--text2);
+                font-weight: 500;
+            }
+
+            .cal-mode-label {
+                font-family: var(--font-mono);
+                font-size: 0.6rem;
+                color: var(--text2);
+                text-align: center;
+                padding: 0.1rem 0;
+                flex-shrink: 0;
+                letter-spacing: 0.04em;
+            }
+
+            .cal-mode-label span {
+                color: var(--gold);
+            }
+
+            .cal-nav-btn {
+                flex: 1;
+                height: 40px;
+                padding: 0 0.5rem;
+                border-radius: var(--r);
+                font-family: var(--font-body);
+                font-size: 0.75rem;
+                font-weight: 600;
+                letter-spacing: 0.02em;
+                border: 1px solid var(--border2);
+                background: var(--surface2);
+                color: var(--text2);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s;
+            }
+
+            .cal-nav-btn:active {
+                transform: scale(0.96);
+            }
+
+            .cal-confirm {
+                display: flex;
+                gap: 0.5rem;
+                flex-shrink: 0;
+            }
+
+            .confirm-btn {
+                flex: 1;
+                padding: 0.6rem;
+                border-radius: var(--r2);
+                font-family: var(--font-body);
+                font-size: 0.75rem;
+                font-weight: 700;
+                letter-spacing: 0.04em;
+                border: none;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .confirm-btn:active {
+                transform: scale(0.97);
+            }
+
+            .confirm-btn.apply {
+                background: var(--gold);
+                color: #000;
+            }
+
+            .confirm-btn.cancel {
+                background: var(--surface2);
+                color: var(--text2);
+                border: 1px solid var(--border2);
+            }
 
             /* ── WEEKLY TABS ───────────────────────────────────────── */
-            .wtt-tabs { display: flex; gap: 0.3rem; flex-shrink: 0; overflow-x: auto; scrollbar-width: none; }
-            .wtt-tabs::-webkit-scrollbar { display: none; }
-            .wtt-tab { flex: 1; min-width: 0; height: 38px; padding: 0; border-radius: var(--r); font-family: var(--font-body); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em; border: 1px solid var(--border2); background: var(--surface2); color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); }
-            .wtt-tab:active { transform: scale(0.96); }
-            .wtt-tab.active { background: var(--gold); color: #000; border-color: var(--gold); box-shadow: 0 2px 12px rgba(201,168,76,0.2); }
+            .wtt-tabs {
+                display: flex;
+                gap: 0.3rem;
+                flex-shrink: 0;
+                overflow-x: auto;
+                scrollbar-width: none;
+            }
+
+            .wtt-tabs::-webkit-scrollbar {
+                display: none;
+            }
+
+            .wtt-tab {
+                flex: 1;
+                min-width: 0;
+                height: 38px;
+                padding: 0;
+                border-radius: var(--r);
+                font-family: var(--font-body);
+                font-size: 0.72rem;
+                font-weight: 600;
+                letter-spacing: 0.02em;
+                border: 1px solid var(--border2);
+                background: var(--surface2);
+                color: var(--text2);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .wtt-tab:active {
+                transform: scale(0.96);
+            }
+
+            .wtt-tab.active {
+                background: var(--gold);
+                color: #000;
+                border-color: var(--gold);
+                box-shadow: 0 2px 12px rgba(201, 168, 76, 0.2);
+            }
 
             /* ── LOADING ───────────────────────────────────────────── */
-            #loading { position: fixed; inset: 0; background: var(--bg); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; transition: opacity 0.4s ease; }
-            #loading.hidden { opacity: 0; pointer-events: none; }
-            .load-logo { font-family: var(--font-body); font-size: 1.5rem; font-weight: 800; color: var(--gold); letter-spacing: -0.02em; }
-            .load-spinner { width: 28px; height: 28px; border: 2px solid var(--border2); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
-            .load-text { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text3); letter-spacing: 0.1em; }
-            @keyframes spin { to { transform: rotate(360deg); } }
+            #loading {
+                position: fixed;
+                inset: 0;
+                background: var(--bg);
+                z-index: 50;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 1rem;
+                transition: opacity 0.4s ease;
+            }
+
+            #loading.hidden {
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            .load-logo {
+                font-family: var(--font-body);
+                font-size: 1.5rem;
+                font-weight: 800;
+                color: var(--gold);
+                letter-spacing: -0.02em;
+            }
+
+            .load-spinner {
+                width: 28px;
+                height: 28px;
+                border: 2px solid var(--border2);
+                border-top-color: var(--gold);
+                border-radius: 50%;
+                animation: spin 0.8s linear infinite;
+            }
+
+            .load-text {
+                font-family: var(--font-mono);
+                font-size: 0.65rem;
+                color: var(--text3);
+                letter-spacing: 0.1em;
+            }
+
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
 
             /* ── TOAST / HINT ──────────────────────────────────────── */
-            .swipe-hint { position: fixed; bottom: calc(var(--safe-bot) + 1rem); left: 50%; transform: translateX(-50%); font-family: var(--font-mono); font-size: 0.55rem; color: var(--text3); letter-spacing: 0.12em; pointer-events: none; opacity: 1; transition: opacity 1s; display: flex; align-items: center; gap: 0.4rem; }
-            .swipe-hint.gone { opacity: 0; }
-            .toast { position: fixed; bottom: calc(var(--safe-bot) + 1.5rem); left: 50%; transform: translateX(-50%) translateY(16px); background: var(--surface3); border: 1px solid var(--border2); border-radius: var(--r2); padding: 0.5rem 1rem; font-family: var(--font-mono); font-size: 0.65rem; color: var(--text); opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; z-index: 200; letter-spacing: 0.04em; }
-            .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+            .swipe-hint {
+                position: fixed;
+                bottom: calc(var(--safe-bot) + 1rem);
+                left: 50%;
+                transform: translateX(-50%);
+                font-family: var(--font-mono);
+                font-size: 0.55rem;
+                color: var(--text3);
+                letter-spacing: 0.12em;
+                pointer-events: none;
+                opacity: 1;
+                transition: opacity 1s;
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+            }
+
+            .swipe-hint.gone {
+                opacity: 0;
+            }
+
+            .toast {
+                position: fixed;
+                bottom: calc(var(--safe-bot) + 1.5rem);
+                left: 50%;
+                transform: translateX(-50%) translateY(16px);
+                background: var(--surface3);
+                border: 1px solid var(--border2);
+                border-radius: var(--r2);
+                padding: 0.5rem 1rem;
+                font-family: var(--font-mono);
+                font-size: 0.65rem;
+                color: var(--text);
+                opacity: 0;
+                transition: all 0.3s;
+                pointer-events: none;
+                white-space: nowrap;
+                z-index: 200;
+                letter-spacing: 0.04em;
+            }
+
+            .toast.show {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
 
             /* ── STALE BANNER ──────────────────────────────────────── */
-            .stale-banner { background: var(--surface2); border: 1px solid var(--warn-dim); padding: 0.55rem 0.8rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-radius: var(--r2); flex-shrink: 0; }
-            .stale-text { font-family: var(--font-mono); font-size: 0.58rem; color: var(--warn); letter-spacing: 0.04em; }
-            .stale-relogin { padding: 0.25rem 0.55rem; background: var(--warn-dim); color: var(--warn); border: 1px solid rgba(255,170,0,0.3); border-radius: var(--r2); font-family: var(--font-mono); font-size: 0.55rem; letter-spacing: 0.06em; cursor: pointer; flex-shrink: 0; }
+            .stale-banner {
+                background: var(--surface2);
+                border: 1px solid var(--warn-dim);
+                padding: 0.55rem 0.8rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                border-radius: var(--r2);
+                flex-shrink: 0;
+            }
+
+            .stale-text {
+                font-family: var(--font-mono);
+                font-size: 0.58rem;
+                color: var(--warn);
+                letter-spacing: 0.04em;
+            }
+
+            .stale-relogin {
+                padding: 0.25rem 0.55rem;
+                background: var(--warn-dim);
+                color: var(--warn);
+                border: 1px solid rgba(255, 170, 0, 0.3);
+                border-radius: var(--r2);
+                font-family: var(--font-mono);
+                font-size: 0.55rem;
+                letter-spacing: 0.06em;
+                cursor: pointer;
+                flex-shrink: 0;
+            }
 
             /* ── EMPTY STATE ───────────────────────────────────────── */
-            .empty-state { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text3); padding: 0.75rem 0; letter-spacing: 0.04em; }
+            .empty-state {
+                font-family: var(--font-mono);
+                font-size: 0.7rem;
+                color: var(--text3);
+                padding: 0.75rem 0;
+                letter-spacing: 0.04em;
+            }
 
             /* ── DESKTOP ARROWS ────────────────────────────────────── */
-            .desk-arrow { display: none; position: fixed; top: 50%; width: 36px; height: 36px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border2); color: var(--text3); cursor: pointer; z-index: 20; align-items: center; justify-content: center; font-size: 1rem; transition: all 0.2s; transform: translateY(-50%); user-select: none; }
-            .desk-arrow:hover { background: var(--surface3); border-color: var(--gold2); color: var(--gold); }
-            .desk-arrow:active { transform: translateY(-50%) scale(0.9); }
-            #arr-left { left: 0.75rem; }
-            #arr-right { right: 0.75rem; }
+            .desk-arrow {
+                display: none;
+                position: fixed;
+                top: 50%;
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                background: var(--surface2);
+                border: 1px solid var(--border2);
+                color: var(--text3);
+                cursor: pointer;
+                z-index: 20;
+                align-items: center;
+                justify-content: center;
+                font-size: 1rem;
+                transition: all 0.2s;
+                transform: translateY(-50%);
+                user-select: none;
+            }
+
+            .desk-arrow:hover {
+                background: var(--surface3);
+                border-color: var(--gold2);
+                color: var(--gold);
+            }
+
+            .desk-arrow:active {
+                transform: translateY(-50%) scale(0.9);
+            }
+
+            #arr-left {
+                left: 0.75rem;
+            }
+
+            #arr-right {
+                right: 0.75rem;
+            }
 
             /* ── ENTER ANIMATION ───────────────────────────────────── */
-            @keyframes fadeUp { from { opacity: 0; translate: 0 10px; } to { opacity: 1; translate: 0 0; } }
+            @keyframes fadeUp {
+                from {
+                    opacity: 0;
+                    translate: 0 10px;
+                }
+
+                to {
+                    opacity: 1;
+                    translate: 0 0;
+                }
+            }
+
             .screen.entering .tt-item,
             .screen.entering .att-item,
             .screen.entering .marks-item,
@@ -240,35 +1221,136 @@
 
             /* ── COMPACT (small phones) ────────────────────────────── */
             @media (max-height: 720px) {
-                .app-header { padding-top: calc(var(--safe-top) + 0.45rem); padding-bottom: 0.25rem; }
-                .dot-nav { padding: 0.1rem 0 0.25rem; }
-                .screen { gap: 0.35rem; padding-top: 0; }
-                .screen-title { font-size: 1.1rem; }
-                .att-item { padding: 0.5rem 0.75rem; }
-                .tt-item { padding: 0.55rem 0.75rem; }
-                .marks-item { padding: 0.6rem 0.75rem; }
-                .cal-grid { gap: 4px; }
-                .od-btn, .cal-nav-btn, .wtt-tab { height: 36px; }
-                .d-num { font-size: 0.85rem; }
+                .app-header {
+                    padding-top: calc(var(--safe-top) + 0.45rem);
+                    padding-bottom: 0.25rem;
+                }
+
+                .dot-nav {
+                    padding: 0.1rem 0 0.25rem;
+                }
+
+                .screen {
+                    gap: 0.35rem;
+                    padding-top: 0;
+                }
+
+                .screen-title {
+                    font-size: 1.1rem;
+                }
+
+                .att-item {
+                    padding: 0.5rem 0.75rem;
+                }
+
+                .tt-item {
+                    padding: 0.55rem 0.75rem;
+                }
+
+                .marks-item {
+                    padding: 0.6rem 0.75rem;
+                }
+
+                .cal-grid {
+                    gap: 4px;
+                }
+
+                .od-btn,
+                .cal-nav-btn,
+                .wtt-tab {
+                    height: 36px;
+                }
+
+                .d-num {
+                    font-size: 0.85rem;
+                }
             }
 
             /* ── DESKTOP ───────────────────────────────────────────── */
             @media (min-width: 768px) {
-                .swipe-wrap { overflow: visible; }
-                .screens-track { gap: 20px; }
-                .screen { --card-w: 420px; min-width: var(--card-w); max-width: var(--card-w); height: 85vh; max-height: 850px; margin: auto 0; padding: 0.75rem 1.25rem 1rem; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); flex-shrink: 0; opacity: 0; transform: scale(0.88) translateY(6px); filter: blur(2px); pointer-events: none; transition: opacity 0.4s, transform 0.4s, filter 0.4s; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-                .screen.desk-active { opacity: 1; transform: scale(1); filter: none; pointer-events: all; border-color: var(--border2); }
-                .screen.desk-near { opacity: 0.45; transform: scale(0.95) translateY(3px); filter: blur(0.5px); pointer-events: all; cursor: pointer; }
-                .screen.desk-near:hover { opacity: 0.6; transform: scale(0.96) translateY(2px); }
-                .screen.desk-far { opacity: 0.12; transform: scale(0.91) translateY(5px); filter: blur(1.5px); pointer-events: none; }
-                .desk-arrow { display: flex; }
-                .dot { width: 6px; height: 6px; }
-                .dot.active { width: 22px; }
-                #swipe-hint { display: none; }
+                .swipe-wrap {
+                    overflow: visible;
+                }
+
+                .screens-track {
+                    gap: 20px;
+                }
+
+                .screen {
+                    --card-w: 420px;
+                    min-width: var(--card-w);
+                    max-width: var(--card-w);
+                    height: 85vh;
+                    max-height: 850px;
+                    margin: auto 0;
+                    padding: 0.75rem 1.25rem 1rem;
+                    border-radius: 20px;
+                    border: 1px solid var(--border);
+                    background: var(--surface);
+                    flex-shrink: 0;
+                    opacity: 0;
+                    transform: scale(0.88) translateY(6px);
+                    filter: blur(2px);
+                    pointer-events: none;
+                    transition:
+                        opacity 0.4s,
+                        transform 0.4s,
+                        filter 0.4s;
+                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+                }
+
+                .screen.desk-active {
+                    opacity: 1;
+                    transform: scale(1);
+                    filter: none;
+                    pointer-events: all;
+                    border-color: var(--border2);
+                }
+
+                .screen.desk-near {
+                    opacity: 0.45;
+                    transform: scale(0.95) translateY(3px);
+                    filter: blur(0.5px);
+                    pointer-events: all;
+                    cursor: pointer;
+                }
+
+                .screen.desk-near:hover {
+                    opacity: 0.6;
+                    transform: scale(0.96) translateY(2px);
+                }
+
+                .screen.desk-far {
+                    opacity: 0.12;
+                    transform: scale(0.91) translateY(5px);
+                    filter: blur(1.5px);
+                    pointer-events: none;
+                }
+
+                .desk-arrow {
+                    display: flex;
+                }
+
+                .dot {
+                    width: 6px;
+                    height: 6px;
+                }
+
+                .dot.active {
+                    width: 22px;
+                }
+
+                #swipe-hint {
+                    display: none;
+                }
             }
-            .instant-snap .screen { transition: none !important; }
+
+            .instant-snap .screen {
+                transition: none !important;
+            }
         </style>
     </head>
+
     <body>
         <!-- LOGIN -->
         <div id="login-screen">
@@ -279,35 +1361,109 @@
             <form class="login-form" onsubmit="return false;">
                 <div class="input-wrap">
                     <span class="input-icon">&#10022;</span>
-                    <input id="inp-id" type="text" placeholder="Net ID" autocomplete="username" />
+                    <input
+                        id="inp-id"
+                        type="text"
+                        placeholder="Net ID"
+                        autocomplete="username"
+                    />
                     <span class="login-suffix">@srmist.edu.in</span>
                 </div>
                 <div class="input-wrap">
                     <span class="input-icon">&#9670;</span>
-                    <input id="inp-pw-sp" type="password" placeholder="Student Portal Password" autocomplete="current-password" />
-                    <button type="button" class="view-pw" onclick="togglePW('inp-pw-sp','toggle-pw-btn-sp')" id="toggle-pw-btn-sp">
-                        <svg width="15" height="15" viewBox="0 0 24 24" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <input
+                        id="inp-pw-sp"
+                        type="password"
+                        placeholder="Student Portal Password"
+                        autocomplete="current-password"
+                    />
+                    <button
+                        type="button"
+                        class="view-pw"
+                        onclick="togglePW('inp-pw-sp', 'toggle-pw-btn-sp')"
+                        id="toggle-pw-btn-sp"
+                    >
+                        <svg
+                            width="15"
+                            height="15"
+                            viewBox="0 0 24 24"
+                            stroke-width="2"
+                        >
+                            <path
+                                d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                            ></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
                     </button>
                 </div>
                 <div class="input-wrap">
                     <span class="input-icon">&#9670;</span>
-                    <input id="inp-pw-acad" type="password" placeholder="Academia Password" autocomplete="current-password" />
-                    <button type="button" class="view-pw" onclick="togglePW('inp-pw-acad','toggle-pw-btn-acad')" id="toggle-pw-btn-acad">
-                        <svg width="15" height="15" viewBox="0 0 24 24" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <input
+                        id="inp-pw-acad"
+                        type="password"
+                        placeholder="Academia Password"
+                        autocomplete="current-password"
+                    />
+                    <button
+                        type="button"
+                        class="view-pw"
+                        onclick="togglePW('inp-pw-acad', 'toggle-pw-btn-acad')"
+                        id="toggle-pw-btn-acad"
+                    >
+                        <svg
+                            width="15"
+                            height="15"
+                            viewBox="0 0 24 24"
+                            stroke-width="2"
+                        >
+                            <path
+                                d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                            ></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
                     </button>
                 </div>
-                <div id="captcha-container" style="display:none;flex-direction:column;gap:0.65rem;">
-                    <img id="captcha-img" src="" alt="Captcha" style="width:100%;height:auto;border-radius:var(--r2);background:white;max-height:72px;object-fit:contain;" />
+                <div
+                    id="captcha-container"
+                    style="display: none; flex-direction: column; gap: 0.65rem"
+                >
+                    <img
+                        id="captcha-img"
+                        src=""
+                        alt="Captcha"
+                        style="
+                            width: 100%;
+                            height: auto;
+                            border-radius: var(--r2);
+                            background: white;
+                            max-height: 72px;
+                            object-fit: contain;
+                        "
+                    />
                     <div class="input-wrap">
                         <span class="input-icon">&#9636;</span>
-                        <input id="inp-captcha" type="text" placeholder="Captcha" autocomplete="off" />
+                        <input
+                            id="inp-captcha"
+                            type="text"
+                            placeholder="Captcha"
+                            autocomplete="off"
+                        />
                     </div>
                 </div>
                 <button class="login-btn" onclick="doLogin()">SIGN IN</button>
                 <div class="login-error" id="login-err"></div>
             </form>
-            <a href="https://github.com/shreyas-sha3/YAA" target="_blank" class="github-link" style="margin-top:0.5rem">
-                <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            <a
+                href="https://github.com/shreyas-sha3/YAA"
+                target="_blank"
+                class="github-link"
+                style="margin-top: 0.5rem"
+            >
+                <svg width="14" height="14" viewBox="0 0 24 24">
+                    <path
+                        d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                    />
+                </svg>
                 <span>VIEW ON GITHUB</span>
             </a>
         </div>
@@ -321,13 +1477,46 @@
 
         <!-- APP -->
         <div id="app">
-            <button class="desk-arrow" id="arr-left" onclick="goTo(curScreen-1)">&#8249;</button>
-            <button class="desk-arrow" id="arr-right" onclick="goTo(curScreen+1)">&#8250;</button>
+            <button
+                class="desk-arrow"
+                id="arr-left"
+                onclick="goTo(curScreen - 1)"
+            >
+                &#8249;
+            </button>
+            <button
+                class="desk-arrow"
+                id="arr-right"
+                onclick="goTo(curScreen + 1)"
+            >
+                &#8250;
+            </button>
             <div class="app-header">
-                <div class="header-name" id="hdr-name" onclick="promptLogout()" title="Click to logout">&#8212;</div>
+                <div
+                    class="header-name"
+                    id="hdr-name"
+                    onclick="promptLogout()"
+                    title="Click to logout"
+                >
+                    &#8212;
+                </div>
                 <div class="header-right">
-                    <a href="https://github.com/shreyas-sha3/YAA" target="_blank" class="github-link-header" title="View Source">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <a
+                        href="https://github.com/shreyas-sha3/YAA"
+                        target="_blank"
+                        class="github-link-header"
+                        title="View Source"
+                    >
+                        <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                        >
+                            <path
+                                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                            />
+                        </svg>
                     </a>
                     <div class="header-badge" id="hdr-day">&#8212;</div>
                 </div>
@@ -347,9 +1536,27 @@
                         <div class="screen-title">Overview</div>
                         <div class="inner-scroll" id="att-list"></div>
                         <div class="od-controls">
-                            <div class="od-btn" id="od-btn" onclick="activateOD()">&#65291; OD Days</div>
-                            <div class="od-btn" id="bunk-btn" onclick="activateBunk()">&#65293; Bunk Days</div>
-                            <div class="od-btn reset" id="reset-btn" onclick="resetModifiers()">Reset</div>
+                            <div
+                                class="od-btn"
+                                id="od-btn"
+                                onclick="activateOD()"
+                            >
+                                &#65291; OD Days
+                            </div>
+                            <div
+                                class="od-btn"
+                                id="bunk-btn"
+                                onclick="activateBunk()"
+                            >
+                                &#65293; Bunk Days
+                            </div>
+                            <div
+                                class="od-btn reset"
+                                id="reset-btn"
+                                onclick="resetModifiers()"
+                            >
+                                Reset
+                            </div>
                         </div>
                     </div>
                     <!-- S3: MARKS -->
@@ -362,17 +1569,43 @@
                     <div class="screen" id="s-cal">
                         <div class="screen-label">Calendar</div>
                         <div class="cal-header">
-                            <div class="cal-month" id="cal-month-label">&#8212;</div>
+                            <div class="cal-month" id="cal-month-label">
+                                &#8212;
+                            </div>
                         </div>
-                        <div class="cal-mode-label" id="cal-mode-label">Tap a working day to view timetable</div>
-                        <div class="cal-grid" id="cal-grid" style="margin-bottom:auto"></div>
-                        <div class="cal-nav" style="justify-content:center;">
-                            <div class="cal-nav-btn" onclick="shiftMonth(-1)">&#8249; Prev</div>
-                            <div class="cal-nav-btn" onclick="shiftMonth(1)">Next &#8250;</div>
+                        <div class="cal-mode-label" id="cal-mode-label">
+                            Tap a working day to view timetable
                         </div>
-                        <div class="cal-confirm" id="cal-confirm" style="display:none">
-                            <div class="confirm-btn cancel" onclick="cancelCalSelection()">Cancel</div>
-                            <div class="confirm-btn apply" onclick="applyCalSelection()">Confirm</div>
+                        <div
+                            class="cal-grid"
+                            id="cal-grid"
+                            style="margin-bottom: auto"
+                        ></div>
+                        <div class="cal-nav" style="justify-content: center">
+                            <div class="cal-nav-btn" onclick="shiftMonth(-1)">
+                                &#8249; Prev
+                            </div>
+                            <div class="cal-nav-btn" onclick="shiftMonth(1)">
+                                Next &#8250;
+                            </div>
+                        </div>
+                        <div
+                            class="cal-confirm"
+                            id="cal-confirm"
+                            style="display: none"
+                        >
+                            <div
+                                class="confirm-btn cancel"
+                                onclick="cancelCalSelection()"
+                            >
+                                Cancel
+                            </div>
+                            <div
+                                class="confirm-btn apply"
+                                onclick="applyCalSelection()"
+                            >
+                                Confirm
+                            </div>
                         </div>
                     </div>
                     <!-- S5: WEEKLY TT -->
@@ -389,6 +1622,7 @@
         <div class="toast" id="toast"></div>
 
         <script>
+            // const API = "https://yaa-k29h.onrender.com/api";
             const API = "http://localhost:5000/api";
             const SCREENS = 5;
             let appToken = localStorage.getItem("academia_token") || "";
@@ -398,43 +1632,69 @@
             let calMode = null;
             let calSelected = new Set();
             let odDays = JSON.parse(localStorage.getItem("od_days") || "[]");
-            let bunkDays = JSON.parse(localStorage.getItem("bunk_days") || "[]");
+            let bunkDays = JSON.parse(
+                localStorage.getItem("bunk_days") || "[]",
+            );
             let calViewMonth = new Date();
             let activeWttDay = "Day 1";
             let jumpCalTarget = null;
             const track = document.getElementById("track");
             const wrap = document.getElementById("swipe-wrap");
-            let touchX = 0, touchY = 0, isDragging = false, dragDelta = 0;
+            let touchX = 0,
+                touchY = 0,
+                isDragging = false,
+                dragDelta = 0;
             const IS_DESKTOP = () => window.innerWidth >= 768;
-            const CARD_W = 420, CARD_GAP = 20;
+            const CARD_W = 420,
+                CARD_GAP = 20;
             const origScreens = [...track.children];
             const cloneFirst = origScreens[0].cloneNode(true);
             const cloneLast = origScreens[SCREENS - 1].cloneNode(true);
             cloneFirst.classList.add("clone");
             cloneLast.classList.add("clone");
-            cloneFirst.querySelectorAll("[id]").forEach(el => el.removeAttribute("id"));
-            cloneLast.querySelectorAll("[id]").forEach(el => el.removeAttribute("id"));
+            cloneFirst
+                .querySelectorAll("[id]")
+                .forEach((el) => el.removeAttribute("id"));
+            cloneLast
+                .querySelectorAll("[id]")
+                .forEach((el) => el.removeAttribute("id"));
             track.appendChild(cloneFirst);
             track.insertBefore(cloneLast, origScreens[0]);
             let domIndex = 1;
-            const getRealScreens = () => [...track.children].slice(1, SCREENS + 1);
+            const getRealScreens = () =>
+                [...track.children].slice(1, SCREENS + 1);
 
-            wrap.addEventListener("touchstart", e => {
-                if (IS_DESKTOP()) return;
-                touchX = e.touches[0].clientX; touchY = e.touches[0].clientY;
-                isDragging = true; dragDelta = 0; track.style.transition = "none";
-            }, { passive: true });
-            wrap.addEventListener("touchmove", e => {
-                if (!isDragging || IS_DESKTOP()) return;
-                const dx = e.touches[0].clientX - touchX;
-                const dy = e.touches[0].clientY - touchY;
-                if (Math.abs(dy) > Math.abs(dx) + 10) { isDragging = false; return; }
-                dragDelta = dx;
-                track.style.transform = `translateX(calc(${-domIndex * 100}vw + ${dx}px))`;
-            }, { passive: true });
+            wrap.addEventListener(
+                "touchstart",
+                (e) => {
+                    if (IS_DESKTOP()) return;
+                    touchX = e.touches[0].clientX;
+                    touchY = e.touches[0].clientY;
+                    isDragging = true;
+                    dragDelta = 0;
+                    track.style.transition = "none";
+                },
+                { passive: true },
+            );
+            wrap.addEventListener(
+                "touchmove",
+                (e) => {
+                    if (!isDragging || IS_DESKTOP()) return;
+                    const dx = e.touches[0].clientX - touchX;
+                    const dy = e.touches[0].clientY - touchY;
+                    if (Math.abs(dy) > Math.abs(dx) + 10) {
+                        isDragging = false;
+                        return;
+                    }
+                    dragDelta = dx;
+                    track.style.transform = `translateX(calc(${-domIndex * 100}vw + ${dx}px))`;
+                },
+                { passive: true },
+            );
             wrap.addEventListener("touchend", () => {
                 if (!isDragging || IS_DESKTOP()) return;
-                isDragging = false; track.style.transition = "";
+                isDragging = false;
+                track.style.transition = "";
                 const thr = wrap.clientWidth * 0.22;
                 if (dragDelta < -thr) doNav(domIndex + 1);
                 else if (dragDelta > thr) doNav(domIndex - 1);
@@ -442,63 +1702,127 @@
             });
 
             let wheelCD = false;
-            wrap.addEventListener("wheel", e => {
-                if (!IS_DESKTOP()) return;
-                e.preventDefault();
-                if (wheelCD) return;
-                wheelCD = true; setTimeout(() => wheelCD = false, 500);
-                const d = e.deltaX || e.deltaY;
-                if (d > 25) doNav(domIndex + 1);
-                else if (d < -25) doNav(domIndex - 1);
-            }, { passive: false });
+            wrap.addEventListener(
+                "wheel",
+                (e) => {
+                    if (!IS_DESKTOP()) return;
+                    e.preventDefault();
+                    if (wheelCD) return;
+                    wheelCD = true;
+                    setTimeout(() => (wheelCD = false), 500);
+                    const d = e.deltaX || e.deltaY;
+                    if (d > 25) doNav(domIndex + 1);
+                    else if (d < -25) doNav(domIndex - 1);
+                },
+                { passive: false },
+            );
 
-            document.addEventListener("keydown", e => {
-                if (!document.getElementById("login-screen").classList.contains("hidden")) return;
-                if (e.key === "ArrowRight") { e.preventDefault(); doNav(domIndex + 1); }
-                if (e.key === "ArrowLeft")  { e.preventDefault(); doNav(domIndex - 1); }
+            document.addEventListener("keydown", (e) => {
+                if (
+                    !document
+                        .getElementById("login-screen")
+                        .classList.contains("hidden")
+                )
+                    return;
+                if (e.key === "ArrowRight") {
+                    e.preventDefault();
+                    doNav(domIndex + 1);
+                }
+                if (e.key === "ArrowLeft") {
+                    e.preventDefault();
+                    doNav(domIndex - 1);
+                }
             });
             getRealScreens().forEach((s, i) => {
-                s.addEventListener("click", e => {
-                    if (e.target.closest(".od-btn,.cal-day,.cal-nav-btn,.confirm-btn,.wtt-tab,a,button")) return;
+                s.addEventListener("click", (e) => {
+                    if (
+                        e.target.closest(
+                            ".od-btn,.cal-day,.cal-nav-btn,.confirm-btn,.wtt-tab,a,button",
+                        )
+                    )
+                        return;
                     if (IS_DESKTOP() && i !== curScreen) doNav(i + 1);
                 });
             });
 
             let snapTimer = null;
             function doNav(tdi) {
-                if (snapTimer) { clearTimeout(snapTimer); snapTimer = null; }
-                if (tdi > SCREENS + 1) { goToCore(1, true); tdi = 2; }
-                else if (tdi < 0) { goToCore(SCREENS, true); tdi = SCREENS - 1; }
+                if (snapTimer) {
+                    clearTimeout(snapTimer);
+                    snapTimer = null;
+                }
+                if (tdi > SCREENS + 1) {
+                    goToCore(1, true);
+                    tdi = 2;
+                } else if (tdi < 0) {
+                    goToCore(SCREENS, true);
+                    tdi = SCREENS - 1;
+                }
                 goToCore(tdi, false);
                 const sd = IS_DESKTOP() ? 460 : 360;
-                if (tdi === 0) snapTimer = setTimeout(() => { goToCore(SCREENS, true); snapTimer = null; }, sd);
-                else if (tdi === SCREENS + 1) snapTimer = setTimeout(() => { goToCore(1, true); snapTimer = null; }, sd);
+                if (tdi === 0)
+                    snapTimer = setTimeout(() => {
+                        goToCore(SCREENS, true);
+                        snapTimer = null;
+                    }, sd);
+                else if (tdi === SCREENS + 1)
+                    snapTimer = setTimeout(() => {
+                        goToCore(1, true);
+                        snapTimer = null;
+                    }, sd);
             }
-            function goTo(idx) { doNav(idx + 1); }
+            function goTo(idx) {
+                doNav(idx + 1);
+            }
 
             function applyTransform(instant) {
                 const els = [...track.children];
                 if (instant) track.classList.add("instant-snap");
                 if (!IS_DESKTOP()) {
-                    track.style.transition = instant ? "none" : "transform .35s ease";
+                    track.style.transition = instant
+                        ? "none"
+                        : "transform .35s ease";
                     track.style.transform = `translateX(${-domIndex * 100}vw)`;
                     track.style.gap = "";
-                    els.forEach(s => s.className = s.className.replace(/(desk-active|desk-near|desk-far)/g, "").trim());
+                    els.forEach(
+                        (s) =>
+                            (s.className = s.className
+                                .replace(
+                                    /(desk-active|desk-near|desk-far)/g,
+                                    "",
+                                )
+                                .trim()),
+                    );
                 } else {
                     const viewW = wrap.clientWidth;
-                    const offset = viewW / 2 - CARD_W / 2 - domIndex * (CARD_W + CARD_GAP);
-                    track.style.transition = instant ? "none" : "transform .45s cubic-bezier(.4,0,.2,1)";
+                    const offset =
+                        viewW / 2 - CARD_W / 2 - domIndex * (CARD_W + CARD_GAP);
+                    track.style.transition = instant
+                        ? "none"
+                        : "transform .45s cubic-bezier(.4,0,.2,1)";
                     track.style.transform = `translateX(${offset}px)`;
                     track.style.gap = CARD_GAP + "px";
                     els.forEach((s, idx) => {
-                        s.classList.remove("desk-active","desk-near","desk-far");
+                        s.classList.remove(
+                            "desk-active",
+                            "desk-near",
+                            "desk-far",
+                        );
                         const d = Math.abs(idx - domIndex);
                         if (d === 0) s.classList.add("desk-active");
-                        else if (d === 1 || (idx === SCREENS + 1 && domIndex === 1) || (idx === 0 && domIndex === SCREENS)) s.classList.add("desk-near");
+                        else if (
+                            d === 1 ||
+                            (idx === SCREENS + 1 && domIndex === 1) ||
+                            (idx === 0 && domIndex === SCREENS)
+                        )
+                            s.classList.add("desk-near");
                         else s.classList.add("desk-far");
                     });
                 }
-                if (instant) { void track.offsetWidth; track.classList.remove("instant-snap"); }
+                if (instant) {
+                    void track.offsetWidth;
+                    track.classList.remove("instant-snap");
+                }
             }
             window.addEventListener("resize", () => applyTransform(true));
 
@@ -513,31 +1837,62 @@
                 if (curScreen !== prev && !instant) triggerEnterAnim(domIndex);
                 hideSHint();
                 syncClones();
-                if (curScreen === 4 && jumpCalTarget) { setWttDay(jumpCalTarget); jumpCalTarget = null; }
-                if (curScreen !== 3 && calMode) { calMode = null; calSelected.clear(); renderCalConfirm(); updateCalModeLabel(); }
+                if (curScreen === 4 && jumpCalTarget) {
+                    setWttDay(jumpCalTarget);
+                    jumpCalTarget = null;
+                }
+                if (curScreen !== 3 && calMode) {
+                    calMode = null;
+                    calSelected.clear();
+                    renderCalConfirm();
+                    updateCalModeLabel();
+                }
             }
             function syncClones() {
                 const te = [...track.children];
-                const s1 = te[1], s5 = te[5], cL = te[0], cF = te[6];
-                if (s1 && cF) { cF.innerHTML = s1.innerHTML; cF.querySelectorAll("[id]").forEach(el => el.removeAttribute("id")); }
-                if (s5 && cL) { cL.innerHTML = s5.innerHTML; cL.querySelectorAll("[id]").forEach(el => el.removeAttribute("id")); }
+                const s1 = te[1],
+                    s5 = te[5],
+                    cL = te[0],
+                    cF = te[6];
+                if (s1 && cF) {
+                    cF.innerHTML = s1.innerHTML;
+                    cF.querySelectorAll("[id]").forEach((el) =>
+                        el.removeAttribute("id"),
+                    );
+                }
+                if (s5 && cL) {
+                    cL.innerHTML = s5.innerHTML;
+                    cL.querySelectorAll("[id]").forEach((el) =>
+                        el.removeAttribute("id"),
+                    );
+                }
             }
             function triggerEnterAnim(idx) {
                 const s = [...track.children][idx];
                 if (!s) return;
-                s.classList.remove("entering"); void s.offsetWidth; s.classList.add("entering");
+                s.classList.remove("entering");
+                void s.offsetWidth;
+                s.classList.add("entering");
                 setTimeout(() => s.classList.remove("entering"), 600);
             }
             function buildDots() {
-                const nav = document.getElementById("dot-nav"); nav.innerHTML = "";
+                const nav = document.getElementById("dot-nav");
+                nav.innerHTML = "";
                 for (let i = 0; i < SCREENS; i++) {
                     const d = document.createElement("div");
                     d.className = "dot" + (i === curScreen ? " active" : "");
-                    d.onclick = () => goTo(i); nav.appendChild(d);
+                    d.onclick = () => goTo(i);
+                    nav.appendChild(d);
                 }
             }
             function updateDots() {
-                document.querySelectorAll(".dot").forEach((d, i) => d.className = "dot" + (i === curScreen ? " active" : ""));
+                document
+                    .querySelectorAll(".dot")
+                    .forEach(
+                        (d, i) =>
+                            (d.className =
+                                "dot" + (i === curScreen ? " active" : "")),
+                    );
             }
 
             async function apiFetch(path, options = {}) {
@@ -546,18 +1901,35 @@
                 if (appToken) options.headers["X-Session-Token"] = appToken;
                 try {
                     let r = await fetch(url, options);
-                    let d = await r.clone().json().catch(() => ({}));
-                    if ((r.status === 401 || d.error === "SESSION_EXPIRED") && !url.includes("/login")) {
-                        if (appData) { appData.syncFailed = true; renderAttendance(); renderMarks(); showToast("Session expired. Please log in again."); }
-                        showLoginScreen(); return d;
+                    let d = await r
+                        .clone()
+                        .json()
+                        .catch(() => ({}));
+                    if (
+                        (r.status === 401 || d.error === "SESSION_EXPIRED") &&
+                        !url.includes("/login")
+                    ) {
+                        if (appData) {
+                            appData.syncFailed = true;
+                            renderAttendance();
+                            renderMarks();
+                            showToast("Session expired. Please log in again.");
+                        }
+                        showLoginScreen();
+                        return d;
                     }
                     if (d.ok && appData) appData.syncFailed = false;
                     return d;
-                } catch (e) { console.error("API Fetch Error:", e); throw e; }
+                } catch (e) {
+                    console.error("API Fetch Error:", e);
+                    throw e;
+                }
             }
 
             async function showLoginScreen() {
-                document.getElementById("login-screen").classList.remove("hidden");
+                document
+                    .getElementById("login-screen")
+                    .classList.remove("hidden");
                 document.getElementById("app").classList.remove("visible");
                 const err = document.getElementById("login-err");
                 err.textContent = "Loading security check...";
@@ -566,12 +1938,19 @@
                     const data = await resp.json();
                     if (data.ok && data.session_token && data.captcha_image) {
                         loginSessionToken = data.session_token;
-                        document.getElementById("captcha-img").src = data.captcha_image;
-                        document.getElementById("captcha-container").style.display = "flex";
+                        document.getElementById("captcha-img").src =
+                            data.captcha_image;
+                        document.getElementById(
+                            "captcha-container",
+                        ).style.display = "flex";
                         document.getElementById("inp-captcha").value = "";
                         err.textContent = "";
-                    } else { err.textContent = "Failed to initialize login."; }
-                } catch (e) { err.textContent = "Network error connecting to backend."; }
+                    } else {
+                        err.textContent = "Failed to initialize login.";
+                    }
+                } catch (e) {
+                    err.textContent = "Network error connecting to backend.";
+                }
             }
 
             async function doLogin() {
@@ -580,26 +1959,49 @@
                 const pwAcad = document.getElementById("inp-pw-acad").value;
                 const cap = document.getElementById("inp-captcha").value.trim();
                 const err = document.getElementById("login-err");
-                if (!id || !pwSp || !pwAcad || !cap) { err.textContent = "Enter all credentials and captcha."; return; }
-                if (!loginSessionToken) { err.textContent = "Security handshake pending. Please refresh."; return; }
-                err.textContent = ""; showLoading("AUTHENTICATING");
+                if (!id || !pwSp || !pwAcad || !cap) {
+                    err.textContent = "Enter all credentials and captcha.";
+                    return;
+                }
+                if (!loginSessionToken) {
+                    err.textContent =
+                        "Security handshake pending. Please refresh.";
+                    return;
+                }
+                err.textContent = "";
+                showLoading("AUTHENTICATING");
                 try {
                     const d = await apiFetch("/login/complete", {
-                        method: "POST", headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ username: id, sp_password: pwSp, acad_password: pwAcad, captcha: cap, session_token: loginSessionToken }),
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            username: id,
+                            sp_password: pwSp,
+                            acad_password: pwAcad,
+                            captcha: cap,
+                            session_token: loginSessionToken,
+                        }),
                     });
                     if (d.ok) {
                         appToken = d.session_token || d.token;
-                        if (appToken) localStorage.setItem("academia_token", appToken);
-                        if (d.creds)  localStorage.setItem("academia_creds", d.creds);
-                        document.getElementById("login-screen").classList.add("hidden");
+                        if (appToken)
+                            localStorage.setItem("academia_token", appToken);
+                        if (d.creds)
+                            localStorage.setItem("academia_creds", d.creds);
+                        document
+                            .getElementById("login-screen")
+                            .classList.add("hidden");
                         await loadData();
                     } else {
-                        hideLoading(); err.textContent = d.error || "Login failed.";
+                        hideLoading();
+                        err.textContent = d.error || "Login failed.";
                         document.getElementById("inp-captcha").value = "";
                         showLoginScreen();
                     }
-                } catch (e) { hideLoading(); err.textContent = "Connection error."; }
+                } catch (e) {
+                    hideLoading();
+                    err.textContent = "Connection error.";
+                }
             }
 
             async function loadData() {
@@ -608,127 +2010,245 @@
                 if (cached) {
                     try {
                         appData = JSON.parse(cached);
-                        if (!appData || !appData.Schedule || !appData.Attendance) throw new Error("Corrupted cache");
+                        if (
+                            !appData ||
+                            !appData.Schedule ||
+                            !appData.Attendance
+                        )
+                            throw new Error("Corrupted cache");
                         populateUIFromData();
                         document.getElementById("app").classList.add("visible");
-                        document.getElementById("login-screen").classList.add("hidden");
-                        hideLoading(); syncDataInBackground(); isValidCache = true;
-                    } catch (e) { console.warn("Cleared corrupted cache."); localStorage.removeItem("yaa_data"); }
+                        document
+                            .getElementById("login-screen")
+                            .classList.add("hidden");
+                        hideLoading();
+                        syncDataInBackground();
+                        isValidCache = true;
+                    } catch (e) {
+                        console.warn("Cleared corrupted cache.");
+                        localStorage.removeItem("yaa_data");
+                    }
                 }
                 if (!isValidCache) {
                     showLoading("FETCHING DATA");
                     try {
-                        const [prof, data] = await Promise.all([apiFetch("/profile"), apiFetch("/data")]);
-                        if (!prof.ok || !data.ok) { hideLoading(); if (!prof.ok) showLoginScreen(); return; }
+                        const [prof, data] = await Promise.all([
+                            apiFetch("/profile"),
+                            apiFetch("/data"),
+                        ]);
+                        if (!prof.ok || !data.ok) {
+                            hideLoading();
+                            if (!prof.ok) showLoginScreen();
+                            return;
+                        }
                         appData = data;
-                        localStorage.setItem("yaa_data", JSON.stringify(appData));
-                        document.getElementById("hdr-name").textContent = prof.name.split(" ")[0] || prof.name;
-                        localStorage.setItem("yaa_user", document.getElementById("hdr-name").textContent);
-                        populateUIFromData(); hideLoading();
+                        localStorage.setItem(
+                            "yaa_data",
+                            JSON.stringify(appData),
+                        );
+                        document.getElementById("hdr-name").textContent =
+                            prof.name.split(" ")[0] || prof.name;
+                        localStorage.setItem(
+                            "yaa_user",
+                            document.getElementById("hdr-name").textContent,
+                        );
+                        populateUIFromData();
+                        hideLoading();
                         document.getElementById("app").classList.add("visible");
-                        document.getElementById("login-screen").classList.add("hidden");
+                        document
+                            .getElementById("login-screen")
+                            .classList.add("hidden");
                         setInterval(renderToday, 60000);
-                    } catch (e) { hideLoading(); showLoginScreen(); }
+                    } catch (e) {
+                        hideLoading();
+                        showLoginScreen();
+                    }
                 }
             }
 
             function populateUIFromData() {
                 const today = new Date();
-                const y = today.getFullYear(), m = String(today.getMonth()+1).padStart(2,"0"), d = String(today.getDate()).padStart(2,"0");
+                const y = today.getFullYear(),
+                    m = String(today.getMonth() + 1).padStart(2, "0"),
+                    d = String(today.getDate()).padStart(2, "0");
                 const todayStr = `${y}-${m}-${d}`;
                 let isHoliday = false;
-                let dayKey = appData.Calendar ? appData.Calendar[todayStr] : appData.DayOrder;
+                let dayKey = appData.Calendar
+                    ? appData.Calendar[todayStr]
+                    : appData.DayOrder;
                 if (!dayKey && appData.Calendar) {
                     isHoliday = true;
                     let dates = Object.keys(appData.Calendar).sort();
-                    let nextDate = dates.find(dt => dt > todayStr);
+                    let nextDate = dates.find((dt) => dt > todayStr);
                     if (nextDate) dayKey = appData.Calendar[nextDate];
                 }
-                appData.effectiveDayKey = dayKey; appData.isHolidayToday = isHoliday;
+                appData.effectiveDayKey = dayKey;
+                appData.isHolidayToday = isHoliday;
                 const hdrDay = document.getElementById("hdr-day");
-                if (isHoliday) { hdrDay.textContent = dayKey ? `Next: ${dayKey}` : "Holiday"; hdrDay.className = "header-badge"; }
-                else { hdrDay.textContent = dayKey || "Holiday"; hdrDay.className = "header-badge" + (dayKey ? " has-day" : ""); }
+                if (isHoliday) {
+                    hdrDay.textContent = dayKey ? `Next: ${dayKey}` : "Holiday";
+                    hdrDay.className = "header-badge";
+                } else {
+                    hdrDay.textContent = dayKey || "Holiday";
+                    hdrDay.className =
+                        "header-badge" + (dayKey ? " has-day" : "");
+                }
                 const name = localStorage.getItem("yaa_user");
-                if (name) document.getElementById("hdr-name").textContent = name;
-                buildDots(); goToCore(domIndex, true);
-                renderToday(); renderAttendance(); renderMarks(); renderCalendar(); renderWeeklyTabs(); renderWeeklyDay("Day 1"); syncClones();
+                if (name)
+                    document.getElementById("hdr-name").textContent = name;
+                buildDots();
+                goToCore(domIndex, true);
+                renderToday();
+                renderAttendance();
+                renderMarks();
+                renderCalendar();
+                renderWeeklyTabs();
+                renderWeeklyDay("Day 1");
+                syncClones();
             }
 
             async function syncDataInBackground() {
                 const nameEl = document.getElementById("hdr-name");
                 const orig = nameEl.textContent;
-                nameEl.innerHTML = orig + ' <span style="font-size:0.5rem;color:var(--gold);animation:spin 1s linear infinite;display:inline-block;">&#8635;</span>';
+                nameEl.innerHTML =
+                    orig +
+                    ' <span style="font-size:0.5rem;color:var(--gold);animation:spin 1s linear infinite;display:inline-block;">&#8635;</span>';
                 try {
-                    const d = await apiFetch(`/data?sync=true`, { signal: AbortSignal.timeout(15000) });
+                    const d = await apiFetch(`/data?sync=true`, {
+                        signal: AbortSignal.timeout(15000),
+                    });
                     if (d.ok) {
-                        if ((!d.Attendance || d.Attendance.length === 0) && (!d.Marks || d.Marks.length === 0) && appData.Attendance && appData.Attendance.length > 0) {
+                        if (
+                            (!d.Attendance || d.Attendance.length === 0) &&
+                            (!d.Marks || d.Marks.length === 0) &&
+                            appData.Attendance &&
+                            appData.Attendance.length > 0
+                        ) {
                             appData.syncFailed = true;
                         } else {
-                            appData.Attendance = d.Attendance; appData.Marks = d.Marks; appData.syncFailed = false;
-                            localStorage.setItem("yaa_data", JSON.stringify(appData));
+                            appData.Attendance = d.Attendance;
+                            appData.Marks = d.Marks;
+                            appData.syncFailed = false;
+                            localStorage.setItem(
+                                "yaa_data",
+                                JSON.stringify(appData),
+                            );
                         }
-                        renderAttendance(); renderMarks(); renderToday();
+                        renderAttendance();
+                        renderMarks();
+                        renderToday();
                     }
-                } catch (e) { console.warn("Background sync failed", e); }
+                } catch (e) {
+                    console.warn("Background sync failed", e);
+                }
                 const name = localStorage.getItem("yaa_user");
                 if (name) nameEl.textContent = name;
             }
 
             function togglePW(inputId, btnId) {
-                const p = document.getElementById(inputId), b = document.getElementById(btnId);
+                const p = document.getElementById(inputId),
+                    b = document.getElementById(btnId);
                 if (p.type === "password") {
                     p.type = "text";
-                    b.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+                    b.innerHTML =
+                        '<svg width="15" height="15" viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
                 } else {
                     p.type = "password";
-                    b.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+                    b.innerHTML =
+                        '<svg width="15" height="15" viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
                 }
             }
             function parseEndTime(ts) {
                 const m = ts.match(/\d{1,2}:\d{2}\s*-\s*(\d{1,2}):(\d{2})/);
-                if (!m) return null; let h = +m[1]; if (h < 8) h += 12; return { h, min: +m[2] };
+                if (!m) return null;
+                let h = +m[1];
+                if (h < 8) h += 12;
+                return { h, min: +m[2] };
             }
             function parseStartTime(ts) {
                 const m = ts.match(/(\d{1,2}):(\d{2})\s*-/);
-                if (!m) return null; let h = +m[1]; if (h < 8) h += 12; return { h, min: +m[2] };
+                if (!m) return null;
+                let h = +m[1];
+                if (h < 8) h += 12;
+                return { h, min: +m[2] };
             }
-            function timeToMins(t) { return t ? t.h * 60 + t.min : 0; }
+            function timeToMins(t) {
+                return t ? t.h * 60 + t.min : 0;
+            }
 
             function renderToday() {
                 if (!appData) return;
-                const d = appData, dayKey = d.effectiveDayKey, isHoliday = d.isHolidayToday;
-                const list = document.getElementById("tt-list"), title = document.getElementById("s1-title");
-                title.textContent = isHoliday ? (dayKey ? `Holiday \u2014 Next: ${dayKey}` : "Holiday") : (dayKey ? dayKey : "Holiday");
-                const now = new Date(), nowMins = isHoliday ? -1 : now.getHours() * 60 + now.getMinutes();
+                const d = appData,
+                    dayKey = d.effectiveDayKey,
+                    isHoliday = d.isHolidayToday;
+                const list = document.getElementById("tt-list"),
+                    title = document.getElementById("s1-title");
+                title.textContent = isHoliday
+                    ? dayKey
+                        ? `Holiday \u2014 Next: ${dayKey}`
+                        : "Holiday"
+                    : dayKey
+                      ? dayKey
+                      : "Holiday";
+                const now = new Date(),
+                    nowMins = isHoliday
+                        ? -1
+                        : now.getHours() * 60 + now.getMinutes();
                 const CUTOFF_START = 8 * 60;
-                let maxClassEnd = 0, items = [];
+                let maxClassEnd = 0,
+                    items = [];
                 if (dayKey && d.Schedule[dayKey]) {
                     for (let i = 0; i < d.Schedule[dayKey].length; i++) {
                         const slot = d.Schedule[dayKey][i];
                         if (!slot || !slot.title || !slot.time) continue;
-                        const end = parseEndTime(slot.time), start = parseStartTime(slot.time);
+                        const end = parseEndTime(slot.time),
+                            start = parseStartTime(slot.time);
                         if (!end || !start) continue;
-                        const endM = timeToMins(end), startM = timeToMins(start);
+                        const endM = timeToMins(end),
+                            startM = timeToMins(start);
                         if (startM < CUTOFF_START) continue;
                         if (endM > maxClassEnd) maxClassEnd = endM;
                         items.push({ ...slot, startM, endM });
                     }
                 }
                 items.sort((a, b) => a.startM - b.startM);
-                let full = [], cur = CUTOFF_START;
+                let full = [],
+                    cur = CUTOFF_START;
                 for (const m of items) {
-                    if (m.startM - cur >= 15) full.push({ free: true, startM: cur, endM: m.startM, time: `${minsToTimeStr(cur)} - ${minsToTimeStr(m.startM)}` });
-                    full.push(m); cur = m.endM;
+                    if (m.startM - cur >= 15)
+                        full.push({
+                            free: true,
+                            startM: cur,
+                            endM: m.startM,
+                            time: `${minsToTimeStr(cur)} - ${minsToTimeStr(m.startM)}`,
+                        });
+                    full.push(m);
+                    cur = m.endM;
                 }
                 const DAY_END = 16 * 60 + 50;
-                if (DAY_END - cur >= 15) full.push({ free: true, startM: cur, endM: DAY_END, time: `${minsToTimeStr(cur)} - 16:50` });
-                if (full.length === 0) full.push({ free: true, startM: CUTOFF_START, endM: DAY_END, time: "8:00 - 16:50" });
+                if (DAY_END - cur >= 15)
+                    full.push({
+                        free: true,
+                        startM: cur,
+                        endM: DAY_END,
+                        time: `${minsToTimeStr(cur)} - 16:50`,
+                    });
+                if (full.length === 0)
+                    full.push({
+                        free: true,
+                        startM: CUTOFF_START,
+                        endM: DAY_END,
+                        time: "8:00 - 16:50",
+                    });
                 list.innerHTML = "";
                 full.forEach((item) => {
                     const div = document.createElement("div");
                     div.className = "tt-item";
                     div.style.setProperty("--i", full.indexOf(item) + 1);
-                    const isNow = !item.free && nowMins >= item.startM && nowMins < item.endM;
+                    const isNow =
+                        !item.free &&
+                        nowMins >= item.startM &&
+                        nowMins < item.endM;
                     const isDone = !item.free && nowMins >= item.endM;
                     if (item.free) div.classList.add("is-free");
                     else if (isNow) div.classList.add("is-now");
@@ -736,7 +2256,8 @@
                     if (isDone) div.classList.add("is-done");
                     let progressHtml = "";
                     if (isNow && !item.free) {
-                        const dur = item.endM - item.startM, elapsed = nowMins - item.startM;
+                        const dur = item.endM - item.startM,
+                            elapsed = nowMins - item.startM;
                         const pct = Math.min(100, (elapsed / dur) * 100);
                         progressHtml = `<div class="progress-bar" style="width:${pct}%"></div>`;
                     }
@@ -757,52 +2278,128 @@
             }
 
             function minsToTimeStr(m) {
-                const h = Math.floor(m / 60), min = m % 60;
+                const h = Math.floor(m / 60),
+                    min = m % 60;
                 return `${h}:${String(min).padStart(2, "0")}`;
             }
-            function formatTimeSlot(ts) { return ts.replace(/\s*(AM|PM)\s*/gi, "").trim().replace(" - ", "\n"); }
+            function formatTimeSlot(ts) {
+                return ts
+                    .replace(/\s*(AM|PM)\s*/gi, "")
+                    .trim()
+                    .replace(" - ", "\n");
+            }
 
             function calcAttendance(raw) {
                 if (!appData || !raw || !Array.isArray(raw)) return [];
                 const today = new Date();
-                const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
-                return raw.map(a => {
-                    let conducted = parseInt(a.Conducted) || 0, attended = parseInt(a.Attended) || 0;
-                    const isPractical = typeof a.Category === "string" && a.Category.toLowerCase().includes("practical");
-                    const aTitleClean = a.Title.toLowerCase().replace(/[^a-z0-9]/g, "");
+                const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+                return raw.map((a) => {
+                    let conducted = parseInt(a.Conducted) || 0,
+                        attended = parseInt(a.Attended) || 0;
+                    const isPractical =
+                        typeof a.Category === "string" &&
+                        a.Category.toLowerCase().includes("practical");
+                    const aTitleClean = a.Title.toLowerCase().replace(
+                        /[^a-z0-9]/g,
+                        "",
+                    );
                     const processedDays = new Set();
                     const processDay = (dateStr, type) => {
-                        const do_ = appData.Calendar ? appData.Calendar[dateStr] : null;
+                        const do_ = appData.Calendar
+                            ? appData.Calendar[dateStr]
+                            : null;
                         if (!do_ || !appData.Schedule[do_]) return;
-                        appData.ActiveCols.forEach(i => {
+                        appData.ActiveCols.forEach((i) => {
                             const slot = appData.Schedule[do_][i];
                             if (!slot || !slot.title) return;
-                            const sTitleClean = slot.title.toLowerCase().replace(/[^a-z0-9]/g, "");
+                            const sTitleClean = slot.title
+                                .toLowerCase()
+                                .replace(/[^a-z0-9]/g, "");
                             let isFutureSlot = dateStr > todayStr;
                             if (dateStr === todayStr && slot.time) {
-                                const m = slot.time.match(/(\d{1,2}):(\d{2})\s*-/);
-                                if (m) { let h = +m[1]; if (h < 8) h += 12; const startMins = h * 60 + +m[2]; const nowMins = today.getHours() * 60 + today.getMinutes(); if (startMins > nowMins) isFutureSlot = true; }
+                                const m = slot.time.match(
+                                    /(\d{1,2}):(\d{2})\s*-/,
+                                );
+                                if (m) {
+                                    let h = +m[1];
+                                    if (h < 8) h += 12;
+                                    const startMins = h * 60 + +m[2];
+                                    const nowMins =
+                                        today.getHours() * 60 +
+                                        today.getMinutes();
+                                    if (startMins > nowMins)
+                                        isFutureSlot = true;
+                                }
                             }
-                            if ((sTitleClean.includes(aTitleClean) || aTitleClean.includes(sTitleClean)) && !!slot.isLab === isPractical) {
-                                if (isFutureSlot) { conducted++; if (type === "od" || type === "attend") attended++; }
-                                else { if (type === "bunk") { if (attended > 0) attended--; } else if (type === "od") { if (attended < conducted) attended++; } }
+                            if (
+                                (sTitleClean.includes(aTitleClean) ||
+                                    aTitleClean.includes(sTitleClean)) &&
+                                !!slot.isLab === isPractical
+                            ) {
+                                if (isFutureSlot) {
+                                    conducted++;
+                                    if (type === "od" || type === "attend")
+                                        attended++;
+                                } else {
+                                    if (type === "bunk") {
+                                        if (attended > 0) attended--;
+                                    } else if (type === "od") {
+                                        if (attended < conducted) attended++;
+                                    }
+                                }
                             }
                         });
                     };
                     if (bunkDays.length > 0) {
-                        const maxBunk = bunkDays.reduce((a, b) => a > b ? a : b);
-                        const allDates = Object.keys(appData.Calendar || {}).sort();
-                        const range = allDates.filter(d => d >= todayStr && d <= maxBunk);
-                        range.forEach(d => { processDay(d, bunkDays.includes(d) ? "bunk" : "attend"); processedDays.add(d); });
+                        const maxBunk = bunkDays.reduce((a, b) =>
+                            a > b ? a : b,
+                        );
+                        const allDates = Object.keys(
+                            appData.Calendar || {},
+                        ).sort();
+                        const range = allDates.filter(
+                            (d) => d >= todayStr && d <= maxBunk,
+                        );
+                        range.forEach((d) => {
+                            processDay(
+                                d,
+                                bunkDays.includes(d) ? "bunk" : "attend",
+                            );
+                            processedDays.add(d);
+                        });
                     }
-                    odDays.forEach(d => { if (!processedDays.has(d)) { processDay(d, "od"); processedDays.add(d); } });
-                    bunkDays.forEach(d => { if (!processedDays.has(d)) processDay(d, "bunk"); });
-                    const pct = conducted > 0 ? (attended / conducted) * 100 : 0;
+                    odDays.forEach((d) => {
+                        if (!processedDays.has(d)) {
+                            processDay(d, "od");
+                            processedDays.add(d);
+                        }
+                    });
+                    bunkDays.forEach((d) => {
+                        if (!processedDays.has(d)) processDay(d, "bunk");
+                    });
+                    const pct =
+                        conducted > 0 ? (attended / conducted) * 100 : 0;
                     const isLow = pct < 75;
                     let marginText = "";
-                    if (isLow) { const needed = Math.ceil((0.75 * conducted - attended) / 0.25); marginText = `<span class="att-num">${needed}</span> Required`; }
-                    else { const canBunk = Math.floor((attended - 0.75 * conducted) / 0.75); marginText = `<span class="att-num">${Math.max(0, canBunk)}</span> Margin`; }
-                    return { ...a, pct, isLow, marginText, effConducted: conducted, effAttended: attended };
+                    if (isLow) {
+                        const needed = Math.ceil(
+                            (0.75 * conducted - attended) / 0.25,
+                        );
+                        marginText = `<span class="att-num">${needed}</span> Required`;
+                    } else {
+                        const canBunk = Math.floor(
+                            (attended - 0.75 * conducted) / 0.75,
+                        );
+                        marginText = `<span class="att-num">${Math.max(0, canBunk)}</span> Margin`;
+                    }
+                    return {
+                        ...a,
+                        pct,
+                        isLow,
+                        marginText,
+                        effConducted: conducted,
+                        effAttended: attended,
+                    };
                 });
             }
 
@@ -812,21 +2409,34 @@
                 const processed = calcAttendance(appData.Attendance);
                 list.innerHTML = "";
                 if (appData.syncFailed) {
-                    const bn = document.createElement("div"); bn.className = "stale-banner";
+                    const bn = document.createElement("div");
+                    bn.className = "stale-banner";
                     bn.innerHTML = `<div class="stale-text">Session Expired \u2014 Data Outdated</div><button class="stale-relogin" onclick="localStorage.removeItem('academia_token');location.reload();">RE-LOGIN</button>`;
                     list.appendChild(bn);
                 }
-                const theory = processed.filter(a => typeof a.Category !== "string" || !a.Category.toLowerCase().includes("practical"));
-                const practical = processed.filter(a => typeof a.Category === "string" && a.Category.toLowerCase().includes("practical"));
+                const theory = processed.filter(
+                    (a) =>
+                        typeof a.Category !== "string" ||
+                        !a.Category.toLowerCase().includes("practical"),
+                );
+                const practical = processed.filter(
+                    (a) =>
+                        typeof a.Category === "string" &&
+                        a.Category.toLowerCase().includes("practical"),
+                );
                 let idx = 1;
-                const renderItem = a => {
+                const renderItem = (a) => {
                     const div = document.createElement("div");
                     div.className = "att-item" + (a.isLow ? " is-low" : "");
                     div.style.setProperty("--i", idx++);
                     const pct = Math.round(a.pct);
                     const circ = 2 * Math.PI * 14;
                     const offset = circ - (pct / 100) * circ;
-                    const strokeColor = a.isLow ? "var(--danger)" : pct >= 80 ? "var(--ok)" : "var(--warn)";
+                    const strokeColor = a.isLow
+                        ? "var(--danger)"
+                        : pct >= 80
+                          ? "var(--ok)"
+                          : "var(--warn)";
                     div.innerHTML = `
                         <div class="att-pct-ring">
                             <svg viewBox="0 0 32 32" width="30" height="30">
@@ -847,67 +2457,142 @@
                 };
                 theory.forEach(renderItem);
                 if (practical.length > 0) {
-                    if (theory.length > 0) { const sep = document.createElement("div"); sep.className = "att-sep"; sep.textContent = "Labs"; list.appendChild(sep); }
+                    if (theory.length > 0) {
+                        const sep = document.createElement("div");
+                        sep.className = "att-sep";
+                        sep.textContent = "Labs";
+                        list.appendChild(sep);
+                    }
                     practical.forEach(renderItem);
                 }
             }
 
             function updateODButtons() {
-                const odEl = document.getElementById("od-btn"), bnEl = document.getElementById("bunk-btn");
+                const odEl = document.getElementById("od-btn"),
+                    bnEl = document.getElementById("bunk-btn");
                 if (odEl && bnEl) {
-                    if (calMode === "od" || odDays.length > 0) odEl.classList.add("active-od"); else odEl.classList.remove("active-od");
-                    if (calMode === "bunk" || bunkDays.length > 0) bnEl.classList.add("active-bunk"); else bnEl.classList.remove("active-bunk");
+                    if (calMode === "od" || odDays.length > 0)
+                        odEl.classList.add("active-od");
+                    else odEl.classList.remove("active-od");
+                    if (calMode === "bunk" || bunkDays.length > 0)
+                        bnEl.classList.add("active-bunk");
+                    else bnEl.classList.remove("active-bunk");
                 }
                 const resetEl = document.getElementById("reset-btn");
                 if (resetEl) {
-                    if (calMode === "od" || odDays.length > 0 || calMode === "bunk" || bunkDays.length > 0) resetEl.classList.add("has-active");
+                    if (
+                        calMode === "od" ||
+                        odDays.length > 0 ||
+                        calMode === "bunk" ||
+                        bunkDays.length > 0
+                    )
+                        resetEl.classList.add("has-active");
                     else resetEl.classList.remove("has-active");
                 }
             }
-            function activateOD() { calMode = "od"; calSelected = new Set(odDays); updateODButtons(); goTo(3); renderCalendar(); renderCalConfirm(); updateCalModeLabel(); }
-            function activateBunk() { calMode = "bunk"; calSelected = new Set(bunkDays); updateODButtons(); goTo(3); renderCalendar(); renderCalConfirm(); updateCalModeLabel(); }
+            function activateOD() {
+                calMode = "od";
+                calSelected = new Set(odDays);
+                updateODButtons();
+                goTo(3);
+                renderCalendar();
+                renderCalConfirm();
+                updateCalModeLabel();
+            }
+            function activateBunk() {
+                calMode = "bunk";
+                calSelected = new Set(bunkDays);
+                updateODButtons();
+                goTo(3);
+                renderCalendar();
+                renderCalConfirm();
+                updateCalModeLabel();
+            }
             function resetModifiers() {
-                odDays = []; bunkDays = []; calMode = null; calSelected.clear();
-                localStorage.removeItem("od_days"); localStorage.removeItem("bunk_days");
-                updateODButtons(); renderAttendance(); renderCalendar(); renderCalConfirm(); updateCalModeLabel();
+                odDays = [];
+                bunkDays = [];
+                calMode = null;
+                calSelected.clear();
+                localStorage.removeItem("od_days");
+                localStorage.removeItem("bunk_days");
+                updateODButtons();
+                renderAttendance();
+                renderCalendar();
+                renderCalConfirm();
+                updateCalModeLabel();
             }
             function applyCalSelection() {
-                if (calMode === "od") { odDays = [...calSelected]; localStorage.setItem("od_days", JSON.stringify(odDays)); }
-                else if (calMode === "bunk") { bunkDays = [...calSelected]; localStorage.setItem("bunk_days", JSON.stringify(bunkDays)); }
-                calMode = null; calSelected.clear();
-                renderCalendar(); renderCalConfirm(); updateCalModeLabel(); renderAttendance(); goTo(1); showToast("Applied");
+                if (calMode === "od") {
+                    odDays = [...calSelected];
+                    localStorage.setItem("od_days", JSON.stringify(odDays));
+                } else if (calMode === "bunk") {
+                    bunkDays = [...calSelected];
+                    localStorage.setItem("bunk_days", JSON.stringify(bunkDays));
+                }
+                calMode = null;
+                calSelected.clear();
+                renderCalendar();
+                renderCalConfirm();
+                updateCalModeLabel();
+                renderAttendance();
+                goTo(1);
+                showToast("Applied");
             }
-            function cancelCalSelection() { calMode = null; calSelected.clear(); updateODButtons(); renderCalConfirm(); updateCalModeLabel(); goTo(1); }
-            function renderCalConfirm() { document.getElementById("cal-confirm").style.display = calMode ? "flex" : "none"; }
+            function cancelCalSelection() {
+                calMode = null;
+                calSelected.clear();
+                updateODButtons();
+                renderCalConfirm();
+                updateCalModeLabel();
+                goTo(1);
+            }
+            function renderCalConfirm() {
+                document.getElementById("cal-confirm").style.display = calMode
+                    ? "flex"
+                    : "none";
+            }
             function updateCalModeLabel() {
                 const lbl = document.getElementById("cal-mode-label");
-                if (calMode === "od") lbl.innerHTML = "Select your <span>OD days</span>";
-                else if (calMode === "bunk") lbl.innerHTML = 'Select days to <span style="color:var(--danger)">bunk</span><div style="font-size:0.55rem;opacity:0.55;margin-top:2px;font-family:var(--font-mono)">Assumes attendance till selection.</div>';
+                if (calMode === "od")
+                    lbl.innerHTML = "Select your <span>OD days</span>";
+                else if (calMode === "bunk")
+                    lbl.innerHTML =
+                        'Select days to <span style="color:var(--danger)">bunk</span><div style="font-size:0.55rem;opacity:0.55;margin-top:2px;font-family:var(--font-mono)">Assumes attendance till selection.</div>';
                 else lbl.innerHTML = "Tap a working day to view timetable";
             }
 
             function numVal(v) {
                 if (v === null || v === undefined) return null;
                 if (typeof v === "number") return v;
-                if (typeof v === "object" && v.parsedValue !== undefined) return v.parsedValue;
-                const n = parseFloat(v); return isNaN(n) ? null : n;
+                if (typeof v === "object" && v.parsedValue !== undefined)
+                    return v.parsedValue;
+                const n = parseFloat(v);
+                return isNaN(n) ? null : n;
             }
             function buildCourseTitleMap() {
-                if (!appData || !appData.Attendance || !Array.isArray(appData.Attendance)) return {};
+                if (
+                    !appData ||
+                    !appData.Attendance ||
+                    !Array.isArray(appData.Attendance)
+                )
+                    return {};
                 const map = {};
-                appData.Attendance.forEach(a => {
+                appData.Attendance.forEach((a) => {
                     if (a.Code) map[a.Code.toUpperCase()] = a.Title;
-                    if (a.Code && a.Code.length > 4) map[a.Code.slice(0, -1).toUpperCase()] = a.Title;
+                    if (a.Code && a.Code.length > 4)
+                        map[a.Code.slice(0, -1).toUpperCase()] = a.Title;
                 });
                 return map;
             }
 
             function renderMarks() {
-                if (!appData || !appData.Marks || !Array.isArray(appData.Marks)) return;
+                if (!appData || !appData.Marks || !Array.isArray(appData.Marks))
+                    return;
                 const list = document.getElementById("marks-list");
                 list.innerHTML = "";
                 if (appData.syncFailed) {
-                    const bn = document.createElement("div"); bn.className = "stale-banner";
+                    const bn = document.createElement("div");
+                    bn.className = "stale-banner";
                     bn.innerHTML = `<div class="stale-text">Session Expired \u2014 Data Outdated</div><button class="stale-relogin" onclick="localStorage.removeItem('academia_token');location.reload();">RE-LOGIN</button>`;
                     list.appendChild(bn);
                 }
@@ -916,18 +2601,51 @@
                     let displayTitle = m.Title;
                     if (appData.Attendance) {
                         const upper = m.Title.toUpperCase();
-                        if (attMap[upper]) { displayTitle = attMap[upper]; }
-                        else { const base = upper.replace(/[TPLJ]$/, ""); const match = Object.entries(attMap).find(([k]) => k === base || k.startsWith(base) || base.startsWith(k)); if (match) displayTitle = match[1]; }
+                        if (attMap[upper]) {
+                            displayTitle = attMap[upper];
+                        } else {
+                            const base = upper.replace(/[TPLJ]$/, "");
+                            const match = Object.entries(attMap).find(
+                                ([k]) =>
+                                    k === base ||
+                                    k.startsWith(base) ||
+                                    base.startsWith(k),
+                            );
+                            if (match) displayTitle = match[1];
+                        }
                     }
-                    const valid = m.Components.filter(c => numVal(c.scored) !== null && numVal(c.max) !== null);
-                    const totalScored = valid.reduce((s, c) => s + numVal(c.scored), 0);
-                    const totalMax = valid.reduce((s, c) => s + numVal(c.max), 0);
-                    const div = document.createElement("div"); div.className = "marks-item"; div.style.setProperty("--i", idx + 1);
-                    const formatM = v => { const n = numVal(v); if (n === null) return "0"; return Number.isInteger(n) ? n.toString() : n.toFixed(2); };
-                    const chips = valid.slice().reverse().map(c => {
-                        const sc = numVal(c.scored), mx = numVal(c.max), isLow = mx > 0 && sc / mx < 0.5;
-                        return `<div class="comp-chip${isLow ? " low" : ""}">${c.name}: ${formatM(c.scored)}/${formatM(c.max)}</div>`;
-                    }).join("");
+                    const valid = m.Components.filter(
+                        (c) =>
+                            numVal(c.scored) !== null && numVal(c.max) !== null,
+                    );
+                    const totalScored = valid.reduce(
+                        (s, c) => s + numVal(c.scored),
+                        0,
+                    );
+                    const totalMax = valid.reduce(
+                        (s, c) => s + numVal(c.max),
+                        0,
+                    );
+                    const div = document.createElement("div");
+                    div.className = "marks-item";
+                    div.style.setProperty("--i", idx + 1);
+                    const formatM = (v) => {
+                        const n = numVal(v);
+                        if (n === null) return "0";
+                        return Number.isInteger(n)
+                            ? n.toString()
+                            : n.toFixed(2);
+                    };
+                    const chips = valid
+                        .slice()
+                        .reverse()
+                        .map((c) => {
+                            const sc = numVal(c.scored),
+                                mx = numVal(c.max),
+                                isLow = mx > 0 && sc / mx < 0.5;
+                            return `<div class="comp-chip${isLow ? " low" : ""}">${c.name}: ${formatM(c.scored)}/${formatM(c.max)}</div>`;
+                        })
+                        .join("");
                     div.innerHTML = `
                         <div class="marks-header">
                             <div class="marks-course">${displayTitle}</div>
@@ -939,50 +2657,126 @@
                 });
             }
 
-            const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-            const DAYS = ["S","M","T","W","T","F","S"];
+            const MONTHS = [
+                "January",
+                "February",
+                "March",
+                "April",
+                "May",
+                "June",
+                "July",
+                "August",
+                "September",
+                "October",
+                "November",
+                "December",
+            ];
+            const DAYS = ["S", "M", "T", "W", "T", "F", "S"];
             function shiftMonth(delta) {
                 const dates = Object.keys(appData.Calendar || {}).sort();
-                const [minY, minM] = dates.length ? dates[0].split("-").map(Number) : [calViewMonth.getFullYear(), calViewMonth.getMonth() + 1];
-                const [maxY, maxM] = dates.length ? dates[dates.length - 1].split("-").map(Number) : [calViewMonth.getFullYear(), calViewMonth.getMonth() + 1];
-                const next = new Date(calViewMonth.getFullYear(), calViewMonth.getMonth() + delta, 1);
-                if (next.getFullYear() < minY || (next.getFullYear() === minY && next.getMonth() + 1 < minM)) return;
-                if (next.getFullYear() > maxY || (next.getFullYear() === maxY && next.getMonth() + 1 > maxM)) return;
-                calViewMonth = next; renderCalendar();
+                const [minY, minM] = dates.length
+                    ? dates[0].split("-").map(Number)
+                    : [calViewMonth.getFullYear(), calViewMonth.getMonth() + 1];
+                const [maxY, maxM] = dates.length
+                    ? dates[dates.length - 1].split("-").map(Number)
+                    : [calViewMonth.getFullYear(), calViewMonth.getMonth() + 1];
+                const next = new Date(
+                    calViewMonth.getFullYear(),
+                    calViewMonth.getMonth() + delta,
+                    1,
+                );
+                if (
+                    next.getFullYear() < minY ||
+                    (next.getFullYear() === minY && next.getMonth() + 1 < minM)
+                )
+                    return;
+                if (
+                    next.getFullYear() > maxY ||
+                    (next.getFullYear() === maxY && next.getMonth() + 1 > maxM)
+                )
+                    return;
+                calViewMonth = next;
+                renderCalendar();
             }
             function renderCalendar() {
                 if (!appData) return;
-                const y = calViewMonth.getFullYear(), mo = calViewMonth.getMonth();
-                document.getElementById("cal-month-label").textContent = `${MONTHS[mo]} ${y}`;
-                const grid = document.getElementById("cal-grid"); grid.innerHTML = "";
-                DAYS.forEach(d => { const el = document.createElement("div"); el.className = "cal-dow"; el.textContent = d; grid.appendChild(el); });
-                const firstDay = new Date(y, mo, 1).getDay(), daysInMonth = new Date(y, mo + 1, 0).getDate();
+                const y = calViewMonth.getFullYear(),
+                    mo = calViewMonth.getMonth();
+                document.getElementById("cal-month-label").textContent =
+                    `${MONTHS[mo]} ${y}`;
+                const grid = document.getElementById("cal-grid");
+                grid.innerHTML = "";
+                DAYS.forEach((d) => {
+                    const el = document.createElement("div");
+                    el.className = "cal-dow";
+                    el.textContent = d;
+                    grid.appendChild(el);
+                });
+                const firstDay = new Date(y, mo, 1).getDay(),
+                    daysInMonth = new Date(y, mo + 1, 0).getDate();
                 const today = new Date();
-                for (let i = 0; i < firstDay; i++) { const el = document.createElement("div"); el.className = "cal-day empty"; grid.appendChild(el); }
+                for (let i = 0; i < firstDay; i++) {
+                    const el = document.createElement("div");
+                    el.className = "cal-day empty";
+                    grid.appendChild(el);
+                }
                 for (let day = 1; day <= daysInMonth; day++) {
                     const dateStr = `${y}-${String(mo + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                    const do_ = appData.Calendar ? appData.Calendar[dateStr] : null;
-                    const isToday = day === today.getDate() && mo === today.getMonth() && y === today.getFullYear();
+                    const do_ = appData.Calendar
+                        ? appData.Calendar[dateStr]
+                        : null;
+                    const isToday =
+                        day === today.getDate() &&
+                        mo === today.getMonth() &&
+                        y === today.getFullYear();
                     const isWorking = !!do_;
-                    const isSelectedOD = odDays.includes(dateStr), isSelectedBunk = bunkDays.includes(dateStr), isCalSel = calSelected.has(dateStr);
-                    const el = document.createElement("div"); el.className = "cal-day";
+                    const isSelectedOD = odDays.includes(dateStr),
+                        isSelectedBunk = bunkDays.includes(dateStr),
+                        isCalSel = calSelected.has(dateStr);
+                    const el = document.createElement("div");
+                    el.className = "cal-day";
                     if (isToday) el.classList.add("today");
-                    if (isWorking) el.classList.add("working"); else el.classList.add("holiday");
-                    if (calMode && isCalSel) el.classList.add(calMode === "od" ? "selected-od" : "selected-bunk");
-                    else if (!calMode && isSelectedOD) el.classList.add("selected-od");
-                    else if (!calMode && isSelectedBunk) el.classList.add("selected-bunk");
-                    el.innerHTML = `<div class="d-num">${day}</div>${isWorking ? `<div class="d-order">${do_.replace("Day ","")}</div>` : ""}`;
-                    el.onclick = e => {
+                    if (isWorking) el.classList.add("working");
+                    else el.classList.add("holiday");
+                    if (calMode && isCalSel)
+                        el.classList.add(
+                            calMode === "od" ? "selected-od" : "selected-bunk",
+                        );
+                    else if (!calMode && isSelectedOD)
+                        el.classList.add("selected-od");
+                    else if (!calMode && isSelectedBunk)
+                        el.classList.add("selected-bunk");
+                    el.innerHTML = `<div class="d-num">${day}</div>${isWorking ? `<div class="d-order">${do_.replace("Day ", "")}</div>` : ""}`;
+                    el.onclick = (e) => {
                         e.stopPropagation();
                         if (calMode) {
                             if (calMode === "bunk") {
                                 const [yStr, mStr, dStr] = dateStr.split("-");
-                                const chosen = new Date(Number(yStr), Number(mStr) - 1, Number(dStr));
-                                if (chosen < new Date(today.getFullYear(), today.getMonth(), today.getDate())) { showToast("Select a future date to bunk."); return; }
+                                const chosen = new Date(
+                                    Number(yStr),
+                                    Number(mStr) - 1,
+                                    Number(dStr),
+                                );
+                                if (
+                                    chosen <
+                                    new Date(
+                                        today.getFullYear(),
+                                        today.getMonth(),
+                                        today.getDate(),
+                                    )
+                                ) {
+                                    showToast("Select a future date to bunk.");
+                                    return;
+                                }
                             }
-                            if (calSelected.has(dateStr)) calSelected.delete(dateStr); else if (isWorking) calSelected.add(dateStr);
+                            if (calSelected.has(dateStr))
+                                calSelected.delete(dateStr);
+                            else if (isWorking) calSelected.add(dateStr);
                             renderCalendar();
-                        } else if (isWorking) { jumpCalTarget = do_; goTo(4); }
+                        } else if (isWorking) {
+                            jumpCalTarget = do_;
+                            goTo(4);
+                        }
                     };
                     grid.appendChild(el);
                 }
@@ -990,76 +2784,156 @@
 
             function renderWeeklyTabs() {
                 if (!appData || !appData.Schedule) return;
-                const tabs = document.getElementById("wtt-tabs"); tabs.innerHTML = "";
-                ["Day 1","Day 2","Day 3","Day 4","Day 5"].forEach(day => {
+                const tabs = document.getElementById("wtt-tabs");
+                tabs.innerHTML = "";
+                ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5"].forEach((day) => {
                     if (!appData.Schedule[day]) return;
                     const t = document.createElement("div");
-                    t.className = "wtt-tab" + (day === activeWttDay ? " active" : "");
-                    t.textContent = day; t.onclick = () => setWttDay(day); tabs.appendChild(t);
+                    t.className =
+                        "wtt-tab" + (day === activeWttDay ? " active" : "");
+                    t.textContent = day;
+                    t.onclick = () => setWttDay(day);
+                    tabs.appendChild(t);
                 });
             }
-            function setWttDay(day) { activeWttDay = day; renderWeeklyTabs(); renderWeeklyDay(day); syncClones(); }
+            function setWttDay(day) {
+                activeWttDay = day;
+                renderWeeklyTabs();
+                renderWeeklyDay(day);
+                syncClones();
+            }
             function renderWeeklyDay(day) {
                 if (!appData || !appData.Schedule) return;
-                const list = document.getElementById("wtt-list"); list.innerHTML = "";
+                const list = document.getElementById("wtt-list");
+                list.innerHTML = "";
                 const slots = appData.Schedule[day];
                 if (!slots || !Array.isArray(slots)) {
-                    const el = document.createElement("div"); el.className = "empty-state"; el.textContent = "No classes scheduled."; list.appendChild(el); return;
+                    const el = document.createElement("div");
+                    el.className = "empty-state";
+                    el.textContent = "No classes scheduled.";
+                    list.appendChild(el);
+                    return;
                 }
-                const CUTOFF_START = 8 * 60, CUTOFF_END = 16 * 60 + 50;
-                let hasAny = false, firstStart = null, lastEnd = null;
+                const CUTOFF_START = 8 * 60,
+                    CUTOFF_END = 16 * 60 + 50;
+                let hasAny = false,
+                    firstStart = null,
+                    lastEnd = null;
                 if (appData.ActiveCols && Array.isArray(appData.ActiveCols)) {
-                    appData.ActiveCols.forEach(i => {
-                        const s = slots[i]; if (!s || !s.title) return;
-                        const st = parseStartTime(s.time), en = parseEndTime(s.time);
-                        if (!st || !en) return; if (timeToMins(en) > CUTOFF_END) return;
-                        const sm = timeToMins(st), em = timeToMins(en);
-                        if (firstStart === null || sm < firstStart) firstStart = sm;
+                    appData.ActiveCols.forEach((i) => {
+                        const s = slots[i];
+                        if (!s || !s.title) return;
+                        const st = parseStartTime(s.time),
+                            en = parseEndTime(s.time);
+                        if (!st || !en) return;
+                        if (timeToMins(en) > CUTOFF_END) return;
+                        const sm = timeToMins(st),
+                            em = timeToMins(en);
+                        if (firstStart === null || sm < firstStart)
+                            firstStart = sm;
                         if (lastEnd === null || em > lastEnd) lastEnd = em;
                     });
                     if (firstStart !== null && firstStart - CUTOFF_START > 60) {
-                        const freeDiv = document.createElement("div"); freeDiv.className = "tt-item is-free";
+                        const freeDiv = document.createElement("div");
+                        freeDiv.className = "tt-item is-free";
                         freeDiv.innerHTML = `<div class="tt-time">${minsToTimeStr(CUTOFF_START)}\n${minsToTimeStr(firstStart)}</div><div class="tt-dot"></div><div class="tt-info"><div class="tt-title">No classes</div></div>`;
                         list.appendChild(freeDiv);
                     }
-                    appData.ActiveCols.forEach(i => {
-                        const s = slots[i]; if (!s || !s.title) return;
-                        const end = parseEndTime(s.time); if (end && timeToMins(end) > CUTOFF_END) return;
+                    appData.ActiveCols.forEach((i) => {
+                        const s = slots[i];
+                        if (!s || !s.title) return;
+                        const end = parseEndTime(s.time);
+                        if (end && timeToMins(end) > CUTOFF_END) return;
                         hasAny = true;
-                        const div = document.createElement("div"); div.className = "tt-item" + (s.isLab ? " is-lab" : ""); div.style.setProperty("--i", i + 1);
+                        const div = document.createElement("div");
+                        div.className = "tt-item" + (s.isLab ? " is-lab" : "");
+                        div.style.setProperty("--i", i + 1);
                         div.innerHTML = `<div class="tt-time">${formatTimeSlot(s.time)}</div><div class="tt-dot"></div><div class="tt-info"><div class="tt-title">${s.title}</div>${s.room ? `<div class="tt-room">${s.room}</div>` : ""}</div>${s.isLab ? '<div class="lab-pill">LAB</div>' : ""}`;
                         list.appendChild(div);
                     });
                 }
                 if (lastEnd !== null && CUTOFF_END - lastEnd >= 15) {
-                    const freeDiv = document.createElement("div"); freeDiv.className = "tt-item is-free";
+                    const freeDiv = document.createElement("div");
+                    freeDiv.className = "tt-item is-free";
                     freeDiv.innerHTML = `<div class="tt-time">${minsToTimeStr(lastEnd)}\n16:50</div><div class="tt-dot"></div><div class="tt-info"><div class="tt-title">No classes</div></div>`;
                     list.appendChild(freeDiv);
                 }
-                if (!hasAny) { const el = document.createElement("div"); el.className = "empty-state"; el.textContent = "No classes scheduled."; list.appendChild(el); }
+                if (!hasAny) {
+                    const el = document.createElement("div");
+                    el.className = "empty-state";
+                    el.textContent = "No classes scheduled.";
+                    list.appendChild(el);
+                }
             }
 
-            function showLoading(msg) { document.getElementById("load-msg").textContent = msg || "LOADING"; document.getElementById("loading").classList.remove("hidden"); }
-            function hideLoading() { document.getElementById("loading").classList.add("hidden"); }
+            function showLoading(msg) {
+                document.getElementById("load-msg").textContent =
+                    msg || "LOADING";
+                document.getElementById("loading").classList.remove("hidden");
+            }
+            function hideLoading() {
+                document.getElementById("loading").classList.add("hidden");
+            }
             let toastTimer;
             function showToast(msg) {
-                const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show");
-                clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+                const t = document.getElementById("toast");
+                t.textContent = msg;
+                t.classList.add("show");
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
             }
-            function hideSHint() { document.getElementById("swipe-hint").classList.add("gone"); }
-            function promptLogout() { if (confirm("Are you sure you want to logout?")) { localStorage.clear(); location.reload(); } }
+            function hideSHint() {
+                document.getElementById("swipe-hint").classList.add("gone");
+            }
+            function promptLogout() {
+                if (confirm("Are you sure you want to logout?")) {
+                    localStorage.clear();
+                    location.reload();
+                }
+            }
 
             (async () => {
-                buildDots(); updateODButtons();
+                buildDots();
+                updateODButtons();
                 if (appToken) {
-                    const cached = localStorage.getItem("yaa_data"), cachedUser = localStorage.getItem("yaa_user");
-                    if (cached && cachedUser) { document.getElementById("login-screen").classList.add("hidden"); hideLoading(); loadData(); return; }
-                    document.getElementById("login-screen").classList.add("hidden");
+                    const cached = localStorage.getItem("yaa_data"),
+                        cachedUser = localStorage.getItem("yaa_user");
+                    if (cached && cachedUser) {
+                        document
+                            .getElementById("login-screen")
+                            .classList.add("hidden");
+                        hideLoading();
+                        loadData();
+                        return;
+                    }
+                    document
+                        .getElementById("login-screen")
+                        .classList.add("hidden");
                     showLoading("CONNECTING");
-                    try { const pj = await apiFetch("/profile", { signal: AbortSignal.timeout(10000) }); if (pj.ok) { await loadData(); return; } } catch (e) { await loadData(); return; }
-                    hideLoading(); showLoginScreen();
-                } else { showLoginScreen(); }
-                setTimeout(() => document.getElementById("swipe-hint").classList.add("gone"), 4000);
+                    try {
+                        const pj = await apiFetch("/profile", {
+                            signal: AbortSignal.timeout(10000),
+                        });
+                        if (pj.ok) {
+                            await loadData();
+                            return;
+                        }
+                    } catch (e) {
+                        await loadData();
+                        return;
+                    }
+                    hideLoading();
+                    showLoginScreen();
+                } else {
+                    showLoginScreen();
+                }
+                setTimeout(
+                    () =>
+                        document
+                            .getElementById("swipe-hint")
+                            .classList.add("gone"),
+                    4000,
+                );
             })();
         </script>
     </body>
