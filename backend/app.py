@@ -38,6 +38,7 @@ CORS(
     allow_headers=["Content-Type", "X-Session-Token"],
     methods=["GET", "POST", "OPTIONS"],
 )
+
 # ==========================================
 # CONFIGURATION & CONSTANTS
 # ==========================================
@@ -48,26 +49,13 @@ USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Ge
 
 
 # ==========================================
-# TIME HELPER
+# TIME HELPER - SINGAPORE TIME SIMULATION
 # ==========================================
-def get_ist_now():
-    """Fetches the exact authoritative time via an HTTP header from Cloudflare/Google
-    to completely eliminate cloud container clock drift on Render/AWS."""
-    try:
-        r = req.head("https://cloudflare.com", timeout=3)
-        gmt_str = r.headers.get("Date")
-        if gmt_str:
-            utc_dt = datetime.datetime.strptime(
-                gmt_str, "%a, %d %b %Y %H:%M:%S %Z"
-            ).replace(tzinfo=datetime.timezone.utc)
-            ist_offset = datetime.timedelta(hours=5, minutes=30)
-            return utc_dt + ist_offset
-    except Exception:
-        pass
-
-    # Fallback if offline/blocked: standard offset calculation
+def get_sgt_now():
+    """Returns current datetime explicitly shifted to Singapore Time (UTC+8)"""
     utc_now = datetime.datetime.now(datetime.timezone.utc)
-    return utc_now + datetime.timedelta(hours=5, minutes=30)
+    sgt_offset = datetime.timedelta(hours=8)
+    return utc_now + sgt_offset
 
 
 # ==========================================
@@ -118,7 +106,7 @@ def generate_telemetry(ulen, plen, now_ms, top_ms):
     return {
         "startTime": now_ms - top_ms,
         "currentDomain": "sp.srmist.edu.in",
-        "timezoneOffset": -330,
+        "timezoneOffset": -480,  # <-- explicitly set to Singapore browser offset
         "screenWidth": 1920,
         "screenHeight": 1080,
         "colorDepth": 24,
@@ -141,7 +129,7 @@ def generate_telemetry(ulen, plen, now_ms, top_ms):
 
 
 # ==========================================
-# PORTAL 1: ACADEMIA ZOHO LOGIN (Timetable & Calendar)
+# PORTAL 1: ACADEMIA ZOHO LOGIN
 # ==========================================
 def authenticate_academia_portal(s, email, password):
     signin_url = f"{ACADEMIA_BASE_URL}/accounts/p/10002227248/signin?orgtype=40&serviceurl={urllib.parse.quote(ACADEMIA_PORTAL_URL + 'redirectFromLogin')}"
@@ -172,7 +160,7 @@ def authenticate_academia_portal(s, email, password):
         lookup_url,
         data={
             "mode": "primary",
-            "cli_time": str(int(get_ist_now().timestamp() * 1000)),
+            "cli_time": str(int(get_sgt_now().timestamp() * 1000)),
             "orgtype": "40",
         },
         headers=zoho_headers,
@@ -190,7 +178,7 @@ def authenticate_academia_portal(s, email, password):
         auth_url,
         params={
             "digest": digest,
-            "cli_time": str(int(get_ist_now().timestamp() * 1000)),
+            "cli_time": str(int(get_sgt_now().timestamp() * 1000)),
             "orgtype": "40",
         },
         data=pw_payload,
@@ -209,7 +197,7 @@ def authenticate_academia_portal(s, email, password):
             auth_url,
             params={
                 "digest": digest,
-                "cli_time": str(int(get_ist_now().timestamp() * 1000)),
+                "cli_time": str(int(get_sgt_now().timestamp() * 1000)),
                 "orgtype": "40",
             },
             data=pw_payload,
@@ -225,7 +213,7 @@ def authenticate_academia_portal(s, email, password):
 
 
 # ==========================================
-# PORTAL 2: STUDENT PORTAL AUTHENTICATION ENDPOINTS
+# PORTAL 2: STUDENT PORTAL ENDPOINTS
 # ==========================================
 @app.route("/api/login/init", methods=["GET"])
 def init_login():
@@ -292,7 +280,7 @@ def init_login():
             )
             captcha_data_uri = f"data:image/png;base64,{base64.b64encode(img_res.content).decode('utf-8')}"
 
-        hi.update({"sec_config": sc, "init_time": get_ist_now().timestamp()})
+        hi.update({"sec_config": sc, "init_time": get_sgt_now().timestamp()})
         return jsonify(
             {
                 "ok": True,
@@ -320,7 +308,7 @@ def complete_login():
         hi = dict(serializer.loads(tk).get("extra", {}))
         sc, it = (
             hi.pop("sec_config", {}),
-            hi.pop("init_time", get_ist_now().timestamp() - 15),
+            hi.pop("init_time", get_sgt_now().timestamp() - 15),
         )
     except Exception:
         return jsonify({"ok": False, "error": "Expired token"}), 401
@@ -334,7 +322,6 @@ def complete_login():
         }
     )
 
-    # Submit credentials to the Student Portal
     p = {
         "username": un,
         "password": sp_pw,
@@ -344,8 +331,8 @@ def complete_login():
     }
     p.update({k: v for k, v in hi.items() if k.startswith("ph_")})
 
-    now_ms = int(get_ist_now().timestamp() * 1000)
-    top_ms = int((get_ist_now().timestamp() - it) * 1000)
+    now_ms = int(get_sgt_now().timestamp() * 1000)
+    top_ms = int((get_sgt_now().timestamp() - it) * 1000)
     tm = generate_telemetry(
         len(un),
         len(sp_pw),
@@ -372,26 +359,17 @@ def complete_login():
             timeout=20,
         )
     except Exception as e:
-        print(f"[DEBUG EXCEPTION] Connection to LoginServlet failed: {str(e)}")
         return jsonify({"ok": False, "error": str(e)}), 502
-
-    # --- ADDED DEBUG LOGS FOR RENDER DIAGNOSTICS ---
-    print(f"[DEBUG LOGIN] Status Code: {res.status_code}")
-    print(f"[DEBUG LOGIN] Response Headers: {dict(res.headers)}")
-    print(f"[DEBUG LOGIN] Response Snippet: {res.text[:500]}")
-    # -----------------------------------------------
 
     if (
         res.status_code == 302
         or "Student Profile" in res.text
         or "HRDSystem" in res.text
     ):
-        # Simultaneously authenticate the Academia Zoho Portal in the background
         try:
             s = authenticate_academia_portal(s, f"{un}@srmist.edu.in", acad_pw)
         except Exception as ze:
             print("Background Academia login failed:", ze)
-
         return jsonify({"ok": True, "session_token": save_session(s)})
 
     elif "invalid captcha" in res.text.lower():
@@ -404,13 +382,11 @@ def complete_login():
             {"ok": False, "error": "Invalid Student Portal Credentials."}
         ), 401
 
-    return jsonify(
-        {"ok": False, "error": f"Server rejected payload. Status: {res.status_code}"}
-    ), 401
+    return jsonify({"ok": False, "error": "Server rejected payload."}), 401
 
 
 # ==========================================
-# DATA SCRAPERS (Academia Zoho & Student Portal)
+# DATA SCRAPERS
 # ==========================================
 def fetch_academia_zoho_html(s, url):
     res = s.get(url, headers={"X-Requested-With": "XMLHttpRequest"})
@@ -436,7 +412,6 @@ def scrape_academia_timetable_and_calendar(s):
     batch, my_slots, grid, active_indices = "2", {}, {}, []
     today_do, calendar_map = None, {}
 
-    # Scrape Time Table from Academia Zoho Portal
     soup_tt = fetch_academia_zoho_html(
         s, f"{ACADEMIA_PORTAL_URL}page/My_Time_Table_2023_24"
     )
@@ -470,7 +445,6 @@ def scrape_academia_timetable_and_calendar(s):
                                 }
                 break
 
-        # Scrape Unified Time Table from Academia Zoho Portal
         suffix = "Batch_1" if batch == "1" else "batch_2"
         soup_uni = fetch_academia_zoho_html(
             s, f"{ACADEMIA_PORTAL_URL}page/Unified_Time_Table_2025_{suffix}"
@@ -503,7 +477,6 @@ def scrape_academia_timetable_and_calendar(s):
                 )
                 if match:
                     has_class[i] = True
-
                 grid[day].append(
                     {
                         "time": times[i] if i < len(times) else "",
@@ -516,14 +489,12 @@ def scrape_academia_timetable_and_calendar(s):
                 )
         active_indices = [i for i, v in enumerate(has_class) if v]
 
-    # Scrape Academic Planner/Calendar from Academia Zoho Portal (using IST now)
     soup_cal = fetch_academia_zoho_html(
         s, f"{ACADEMIA_PORTAL_URL}page/Academic_Planner_2026_27_ODD"
     )
     if soup_cal and soup_cal.find("table"):
-        now = get_ist_now()
+        now = get_sgt_now()
         month_range, month_nums = range(0, 6), [7, 8, 9, 10, 11, 12]
-
         rows = soup_cal.find("table").find_all("tr")
         for block_idx in month_range:
             dt_idx, do_idx, month_num = (
@@ -566,7 +537,6 @@ def scrape_student_portal_attendance(s):
     )
     if res.status_code != 200:
         return []
-
     data = []
     for table in BeautifulSoup(res.text, "html.parser").find_all(
         "table", class_="table"
@@ -605,7 +575,6 @@ def scrape_student_portal_marks(s):
     )
     if res.status_code != 200:
         return []
-
     data = []
     for table in BeautifulSoup(res.text, "html.parser").find_all(
         "table", class_="table"
@@ -703,7 +672,6 @@ def get_data():
         )
 
         if is_sync:
-            # SYNC MODE: Only fetch Attendance & Marks from Student Portal
             return jsonify(
                 {
                     "ok": True,
@@ -712,24 +680,14 @@ def get_data():
                 }
             )
         else:
-            # INITIAL LOAD: Fetch Timetable/Calendar (Academia Zoho) + Attendance/Marks (Student Portal) at once
-            attendance_data = scrape_student_portal_attendance(s)
-            marks_data = scrape_student_portal_marks(s)
-            zoho_data = scrape_academia_timetable_and_calendar(s)
-
             return jsonify(
                 {
                     "ok": True,
-                    "DayOrder": zoho_data.get("DayOrder"),
-                    "Calendar": zoho_data.get("Calendar", {}),
-                    "ActiveCols": zoho_data.get("ActiveCols", []),
-                    "Schedule": zoho_data.get("Schedule", {}),
-                    "Batch": zoho_data.get("Batch", "2"),
-                    "Attendance": attendance_data,
-                    "Marks": marks_data,
+                    **scrape_academia_timetable_and_calendar(s),
+                    "Attendance": scrape_student_portal_attendance(s),
+                    "Marks": scrape_student_portal_marks(s),
                 }
             )
-
     except Exception as e:
         import traceback
 
